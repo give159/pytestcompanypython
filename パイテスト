@@ -1,0 +1,40 @@
+このPythonコードをpytestを使ったテストコードに変換します。pytestテストコードを作成しました！主な特徴：
+
+## テスト構成
+
+1. **クラスごとのテスト**
+   - `TestGenderEnum`: 性別列挙型のテスト
+   - `TestPostEnum`: 役職列挙型のテスト
+   - `TestHuman`: 人間クラスのテスト
+   - `TestEmployee`: 社員クラスのテスト
+   - `TestPresident`: 社長クラスのテスト
+   - `TestCompany`: 会社クラスのテスト
+   - `TestIntegration`: 統合テスト
+
+2. **テスト内容**
+   - 初期化テスト
+   - プロパティ取得テスト
+   - メソッド動作テスト
+   - エッジケーステスト
+   - 境界値テスト（社員数上限など）
+   - 統合ワークフローテスト
+
+3. **pytestの機能活用**
+   - `capsys`フィクスチャで標準出力をキャプチャ
+   - クラスベースのテスト構成
+   - 詳細なアサーション
+
+## 実行方法
+
+```bash
+# 基本実行
+pytest test_company_management.py
+
+# 詳細表示
+pytest test_company_management.py -v
+
+# カバレッジ付き
+pytest test_company_management.py --cov=company_management
+```
+
+元のコードは`company_management.py`という名前で保存してください。
