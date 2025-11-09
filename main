@@ -1,0 +1,668 @@
+"""
+会社管理システム
+
+このモジュールは、社員、社長、会社を管理するためのクラスを提供します。
+
+Classes:
+    Gender: 性別を表す列挙型
+    Post: 役職を表す列挙型
+    Human: 人間の基底クラス
+    President: 社長クラス
+    Employee: 社員クラス
+    Company: 会社クラス
+"""
+
+from enum import Enum
+from typing import List, Optional
+import random
+
+
+class Gender(Enum):
+    """
+    性別を表す列挙型
+
+    Attributes:
+        MAN: 男性
+        WOMAN: 女性
+        OTHER: その他
+    """
+
+    MAN = "男性"
+    WOMAN = "女性"
+    OTHER = "その他"
+
+
+class Post(Enum):
+    """
+    役職を表す列挙型
+
+    Attributes:
+        HIRA: 平社員
+        SYUNIN: 主任
+        KATYO: 課長
+        YARUIN: 役員
+    """
+
+    HIRA = "ヒラ"
+    SYUNIN = "主任"
+    KATYO = "課長"
+    YARUIN = "役員"
+
+
+class Human:
+    """
+    人間を表す基底クラス
+
+    Attributes:
+        name (str): 名前
+        gender (Gender): 性別
+        age (int): 年齢
+    """
+
+    def __init__(self, name: str, gender: Gender, age: int):
+        """
+        Humanクラスのコンストラクタ
+
+        Args:
+            name (str): 名前
+            gender (Gender): 性別
+            age (int): 年齢
+        """
+        self._name = name
+        self._gender = gender
+        self._age = age
+
+    @property
+    def name(self) -> str:
+        """
+        名前を取得
+
+        Returns:
+            str: 名前
+        """
+        return self._name
+
+    @property
+    def gender(self) -> Gender:
+        """
+        性別を取得
+
+        Returns:
+            Gender: 性別
+        """
+        return self._gender
+
+    @property
+    def age(self) -> int:
+        """
+        年齢を取得
+
+        Returns:
+            int: 年齢
+        """
+        return self._age
+
+    def do_self_introduction(self) -> None:
+        """
+        自己紹介を行う
+
+        Returns:
+            None
+        """
+        print(
+            f"私の名前は{self.name}です。性別は{self.gender.value}で、年齢は{self.age}歳です。"
+        )
+
+
+class Employee(Human):
+    """
+    社員を表すクラス
+
+    Attributes:
+        post (Post): 役職
+        id (str): 社員ID
+        _salary_map (dict): 役職と給与のマッピング
+    """
+
+    _salary_map = {
+        Post.HIRA: 200000,
+        Post.SYUNIN: 300000,
+        Post.KATYO: 450000,
+        Post.YARUIN: 600000,
+    }
+
+    def __init__(self, name: str, gender: Gender, age: int, post: Post):
+        """
+        Employeeクラスのコンストラクタ
+
+        Args:
+            name (str): 名前
+            gender (Gender): 性別
+            age (int): 年齢
+            post (Post): 役職
+        """
+        super().__init__(name, gender, age)
+        self._post = post
+        self._id = self._generate_id()
+
+    def _generate_id(self) -> str:
+        """
+        社員IDを生成
+
+        Returns:
+            str: 社員ID（ランダムな4桁の数字）
+        """
+        return str(random.randint(1000, 9999))
+
+    @property
+    def post(self) -> Post:
+        """
+        役職を取得
+
+        Returns:
+            Post: 役職
+        """
+        return self._post
+
+    @property
+    def salary(self) -> int:
+        """
+        給与を取得
+
+        Returns:
+            int: 給与額
+        """
+        return self._salary_map[self._post]
+
+    @property
+    def id(self) -> str:
+        """
+        社員IDを取得
+
+        Returns:
+            str: 社員ID
+        """
+        return self._id
+
+    def do_self_introduction(self) -> None:
+        """
+        自己紹介を行う（社員版）
+
+        Returns:
+            None
+        """
+        print(
+            f"私の名前は{self.name}です。性別は{self.gender.value}で、"
+            f"年齢は{self.age}歳、役職は{self.post.value}です。"
+        )
+
+    def promote(self) -> None:
+        """
+        昇進する
+
+        Returns:
+            None
+        """
+        post_order = [Post.HIRA, Post.SYUNIN, Post.KATYO, Post.YARUIN]
+        current_index = post_order.index(self._post)
+
+        if current_index < len(post_order) - 1:
+            self._post = post_order[current_index + 1]
+            print(f"{self.name}さんが{self.post.value}に昇進しました！")
+        else:
+            print(f"{self.name}さんはすでに最高役職です。")
+
+    def demote(self) -> None:
+        """
+        降格する
+
+        Returns:
+            None
+        """
+        post_order = [Post.HIRA, Post.SYUNIN, Post.KATYO, Post.YARUIN]
+        current_index = post_order.index(self._post)
+
+        if current_index > 0:
+            self._post = post_order[current_index - 1]
+            print(f"{self.name}さんが{self.post.value}に降格しました。")
+        else:
+            print(f"{self.name}さんはすでに最低役職です。")
+
+
+class President(Human):
+    """
+    社長を表すクラス
+
+    Attributes:
+        _salary (int): 社長の給与
+        company (Company): 所属する会社
+    """
+
+    def __init__(self, name: str, gender: Gender, age: int):
+        """
+        Presidentクラスのコンストラクタ
+
+        Args:
+            name (str): 名前
+            gender (Gender): 性別
+            age (int): 年齢
+        """
+        super().__init__(name, gender, age)
+        self._salary = 1000000
+        self._company: Optional["Company"] = None
+
+    @property
+    def salary(self) -> int:
+        """
+        給与を取得
+
+        Returns:
+            int: 給与額
+        """
+        return self._salary
+
+    @property
+    def company(self) -> Optional["Company"]:
+        """
+        会社を取得
+
+        Returns:
+            Optional[Company]: 所属する会社
+        """
+        return self._company
+
+    @company.setter
+    def company(self, company: "Company") -> None:
+        """
+        会社を設定
+
+        Args:
+            company (Company): 所属する会社
+
+        Returns:
+            None
+        """
+        self._company = company
+
+    def do_self_introduction(self) -> None:
+        """
+        自己紹介を行う（社長版）
+
+        Returns:
+            None
+        """
+        print(
+            f"私の名前は{self.name}です。性別は{self.gender.value}で、"
+            f"年齢は{self.age}歳、社長です。"
+        )
+
+    def get_personnel_by_id(self, id: str) -> Optional[Employee]:
+        """
+        IDで社員を検索
+
+        Args:
+            id (str): 社員ID
+
+        Returns:
+            Optional[Employee]: 見つかった社員、見つからない場合はNone
+        """
+        if self._company is None:
+            return None
+
+        for employee in self._company.employees:
+            if employee.id == id:
+                return employee
+        return None
+
+    def get_personnel_by_name(self, name: str) -> Optional[Employee]:
+        """
+        名前で社員を検索
+
+        Args:
+            name (str): 社員名
+
+        Returns:
+            Optional[Employee]: 見つかった社員、見つからない場合はNone
+        """
+        if self._company is None:
+            return None
+
+        for employee in self._company.employees:
+            if employee.name == name:
+                return employee
+        return None
+
+    def add_employee(self, name: str, gender: Gender, age: int, post: Post) -> None:
+        """
+        社員を追加
+
+        Args:
+            name (str): 名前
+            gender (Gender): 性別
+            age (int): 年齢
+            post (Post): 役職
+
+        Returns:
+            None
+        """
+        if self._company is None:
+            print("会社が設定されていません。")
+            return
+
+        self._company.add_employee(name, gender, age, post)
+
+    def delete_employee(self, person: Employee) -> None:
+        """
+        社員を削除
+
+        Args:
+            person (Employee): 削除する社員
+
+        Returns:
+            None
+        """
+        if self._company is None:
+            print("会社が設定されていません。")
+            return
+
+        self._company.delete_employee(person)
+
+    def resignation(self) -> Optional["President"]:
+        """
+        辞任する（追加課題）
+
+        Returns:
+            Optional[President]: 新しい社長、社員がいない場合はNone
+        """
+        if self._company is None:
+            print("会社が設定されていません。")
+            return None
+
+        # 社員がいない場合
+        if len(self._company.employees) == 0:
+            print("いいえ、私以外に社員がいない場合は辞任しないでください")
+            return None
+
+        # 次期社長を選出
+        next_president_employee = self._company.select_president()
+
+        if next_president_employee is None:
+            print("次期社長候補が見つかりません。")
+            return None
+
+        # 社員を役員リストから削除
+        self._company.delete_employee(next_president_employee)
+
+        # 新しいPresidentオブジェクトを作成
+        new_president = President(
+            next_president_employee.name,
+            next_president_employee.gender,
+            next_president_employee.age,
+        )
+
+        # 会社に新社長を設定
+        new_president.company = self._company
+
+        # 辞任メッセージ
+        print(f"{self.name}は{new_president.name}、辞任はだいた！")
+
+        return new_president
+
+
+class Company:
+    """
+    会社を表すクラス
+
+    Attributes:
+        MAX_NUMBER_OF_PEOPLE (int): 最大社員数
+        current_number (int): 現在の社員数
+        employees (List[Employee]): 社員リスト
+    """
+
+    MAX_NUMBER_OF_PEOPLE = 10
+
+    def __init__(self):
+        """
+        Companyクラスのコンストラクタ
+        """
+        self._employees: List[Employee] = []
+
+    @property
+    def current_number(self) -> int:
+        """
+        現在の社員数を取得
+
+        Returns:
+            int: 社員数
+        """
+        return len(self._employees)
+
+    @property
+    def employees(self) -> List[Employee]:
+        """
+        社員リストを取得
+
+        Returns:
+            List[Employee]: 社員リスト
+        """
+        return self._employees
+
+    @property
+    def number_of_employee(self) -> int:
+        """
+        社員数を取得
+
+        Returns:
+            int: 社員数
+        """
+        return len(self._employees)
+
+    def get_personnel_by_id(self, id: str) -> Optional[Employee]:
+        """
+        IDで社員を検索
+
+        Args:
+            id (str): 社員ID
+
+        Returns:
+            Optional[Employee]: 見つかった社員、見つからない場合はNone
+        """
+        for employee in self._employees:
+            if employee.id == id:
+                return employee
+        return None
+
+    def get_personnel_by_name(self, name: str) -> Optional[Employee]:
+        """
+        名前で社員を検索
+
+        Args:
+            name (str): 社員名
+
+        Returns:
+            Optional[Employee]: 見つかった社員、見つからない場合はNone
+        """
+        for employee in self._employees:
+            if employee.name == name:
+                return employee
+        return None
+
+    def add_employee(self, name: str, gender: Gender, age: int, post: Post) -> None:
+        """
+        社員を追加
+
+        Args:
+            name (str): 名前
+            gender (Gender): 性別
+            age (int): 年齢
+            post (Post): 役職
+
+        Returns:
+            None
+        """
+        if self.current_number >= self.MAX_NUMBER_OF_PEOPLE:
+            print(f"社員数が上限（{self.MAX_NUMBER_OF_PEOPLE}名）に達しています。")
+            return
+
+        new_employee = Employee(name, gender, age, post)
+        self._employees.append(new_employee)
+        print(f"{name}さん（ID: {new_employee.id}）を採用しました。")
+
+    def delete_employee(self, person: Employee) -> None:
+        """
+        社員を削除
+
+        Args:
+            person (Employee): 削除する社員
+
+        Returns:
+            None
+        """
+        if person in self._employees:
+            self._employees.remove(person)
+            print(f"{person.name}さんを削除しました。")
+        else:
+            print(f"{person.name}さんは社員リストに存在しません。")
+
+    def select_president(self) -> Optional[Employee]:
+        """
+        次期社長を選出（追加課題）
+
+        次期社長選出基準:
+        1. 役員リストから選出
+        2. 役員がいない場合は、最年長の社員を選出
+
+        Returns:
+            Optional[Employee]: 次期社長候補、社員がいない場合はNone
+        """
+        if len(self._employees) == 0:
+            return None
+
+        # 役員リストから検索
+        executives = [emp for emp in self._employees if emp.post == Post.YARUIN]
+
+        if executives:
+            # 役員の中から最年長を選出
+            return max(executives, key=lambda e: e.age)
+        else:
+            # 役員がいない場合は、全社員から最年長を選出
+            return max(self._employees, key=lambda e: e.age)
+
+    def display_all_employees(self) -> None:
+        """
+        全社員の情報を表示
+
+        Returns:
+            None
+        """
+        if len(self._employees) == 0:
+            print("社員がいません。")
+            return
+
+        print(f"\n{'='*60}")
+        print(f"{'社員一覧':^54}")
+        print(f"{'='*60}")
+        print(f"{'名前':<15} {'性別':<10} {'年齢':<5} {'役職':<10} {'ID':<10}")
+        print(f"{'-'*60}")
+
+        for emp in self._employees:
+            print(
+                f"{emp.name:<15} {emp.gender.value:<10} {emp.age:<5} {emp.post.value:<10} {emp.id:<10}"
+            )
+
+        print(f"{'='*60}")
+        print(f"合計: {self.current_number}名\n")
+
+
+def main():
+    """
+    メイン関数 - テスト実施
+
+    Returns:
+        None
+    """
+    print("=" * 60)
+    print(" 会社管理システム - テストプログラム")
+    print("=" * 60)
+
+    # 1. Presidentクラスのインスタンス生成
+    print("\n■ 1. 社長の作成")
+    president = President("倍井 杉蔵", Gender.MAN, 88)
+    president.do_self_introduction()
+
+    # 2. Companyクラスのインスタンス生成
+    print("\n■ 2. 会社の作成")
+    company = Company()
+    president.company = company
+    print(f"会社を設立しました。最大社員数: {Company.MAX_NUMBER_OF_PEOPLE}名")
+
+    # 3. 社員の追加
+    print("\n■ 3. 社員の採用")
+    employees_data = [
+        ("佐藤 太郎", Gender.MAN, 22, Post.HIRA),
+        ("鈴木 二郎", Gender.MAN, 44, Post.YARUIN),
+        ("高橋 三郎", Gender.MAN, 33, Post.SYUNIN),
+        ("田中 しょうこ", Gender.WOMAN, 42, Post.KATYO),
+        ("渡辺中小路 五郎左衛門", Gender.MAN, 60, Post.HIRA),
+        ("篠崎 六郎", Gender.OTHER, 18, Post.SYUNIN),
+        ("那奈南波 菜々美", Gender.WOMAN, 19, Post.HIRA),
+        ("周 八郎", Gender.MAN, 21, Post.YARUIN),
+    ]
+
+    for name, gender, age, post in employees_data:
+        president.add_employee(name, gender, age, post)
+
+    # 4. 社員一覧の表示
+    print("\n■ 4. 社員一覧")
+    company.display_all_employees()
+
+    # 5. 検索機能のテスト
+    print("\n■ 5. 社員検索")
+    search_name = "佐藤 太郎"
+    found_employee = president.get_personnel_by_name(search_name)
+    if found_employee:
+        print(f"名前検索: {search_name}さんが見つかりました（ID: {found_employee.id}）")
+        found_employee.do_self_introduction()
+
+    # 6. 昇進・降格のテスト
+    print("\n■ 6. 昇進・降格テスト")
+    if found_employee:
+        found_employee.promote()
+        found_employee.promote()
+        found_employee.demote()
+
+    # 7. 追加課題: 次期社長の選出
+    print("\n■ 7. 次期社長の選出テスト")
+    next_president_candidate = company.select_president()
+    if next_president_candidate:
+        print(
+            f"次期社長候補: {next_president_candidate.name}さん "
+            f"（年齢: {next_president_candidate.age}歳、役職: {next_president_candidate.post.value}）"
+        )
+
+    # 8. 追加課題: 辞任機能のテスト
+    print("\n■ 8. 社長の辞任テスト")
+    new_president = president.resignation()
+
+    if new_president:
+        print(f"\n新社長の就任:")
+        new_president.do_self_introduction()
+        print(f"現在の社員数: {company.current_number}名")
+
+    # 9. 社員削除のテスト
+    print("\n■ 9. 社員削除テスト")
+    if len(company.employees) > 0:
+        employee_to_delete = company.employees[0]
+        new_president.delete_employee(employee_to_delete)
+
+    # 10. 最終的な社員一覧
+    print("\n■ 10. 最終的な社員一覧")
+    company.display_all_employees()
+
+    print("\n" + "=" * 60)
+    print(" テスト完了")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
