@@ -1,0 +1,716 @@
+# pytest 完全チートシート 🚀
+
+## 📚 目次
+- [インストール](#インストール)
+- [基本構造](#基本構造)
+- [assert文](#assert文)
+- [フィクスチャ](#フィクスチャ)
+- [パラメータ化テスト](#パラメータ化テスト)
+- [例外テスト](#例外テスト)
+- [マーカー](#マーカー)
+- [モック](#モック)
+- [実行オプション](#実行オプション)
+- [便利なテクニック](#便利なテクニック)
+
+---
+
+## 📦 インストール
+
+```bash
+# pytestのインストール
+pip install pytest
+
+# カバレッジ計測ツールも一緒に
+pip install pytest-cov
+
+# モックライブラリ（Python 3.3+は標準装備）
+# unittest.mock は標準ライブラリ
+```
+
+---
+
+## 🏗️ 基本構造
+
+### ファイル構成
+
+```
+project/
+├── src/
+│   └── calculator.py      # テスト対象のコード
+├── tests/
+│   ├── __init__.py
+│   └── test_calculator.py # テストコード
+└── pytest.ini             # pytest設定ファイル（オプション）
+```
+
+### 命名規則
+
+| 要素 | 規則 | 例 |
+|------|------|-----|
+| テストファイル | `test_*.py` または `*_test.py` | `test_user.py` |
+| テストクラス | `Test*` | `TestUser` |
+| テスト関数 | `test_*` | `test_login` |
+
+### 最小のテストコード
+
+```python
+# test_sample.py
+def test_addition():
+    assert 1 + 1 == 2
+```
+
+```bash
+# 実行
+pytest test_sample.py
+```
+
+---
+
+## ✅ assert文
+
+### 基本のassert
+
+```python
+# 等価比較
+assert x == y
+assert x != y
+
+# 真偽値
+assert x
+assert not x
+assert x is True
+assert x is False
+
+# None判定
+assert x is None
+assert x is not None
+
+# 比較
+assert x > y
+assert x >= y
+assert x < y
+assert x <= y
+
+# 包含
+assert 'hello' in text
+assert 'hello' not in text
+assert item in list_obj
+
+# 型チェック
+assert isinstance(x, int)
+assert type(x) == str
+```
+
+### カスタムエラーメッセージ
+
+```python
+assert x == y, f"Expected {y}, but got {x}"
+assert len(items) > 0, "リストが空です"
+```
+
+### 複数条件
+
+```python
+# すべてTrue
+assert all([x > 0, y > 0, z > 0])
+
+# 少なくとも1つTrue
+assert any([x > 0, y > 0, z > 0])
+```
+
+---
+
+## 🎯 フィクスチャ
+
+### 基本のフィクスチャ
+
+```python
+import pytest
+
+@pytest.fixture
+def sample_user():
+    """テスト用ユーザーを作成"""
+    return {"name": "太郎", "age": 30}
+
+def test_user_name(sample_user):
+    assert sample_user["name"] == "太郎"
+```
+
+### セットアップとティアダウン
+
+```python
+@pytest.fixture
+def database_connection():
+    # セットアップ
+    db = Database()
+    db.connect()
+    
+    yield db  # テストに渡す
+    
+    # ティアダウン
+    db.disconnect()
+
+def test_query(database_connection):
+    result = database_connection.query("SELECT * FROM users")
+    assert len(result) > 0
+```
+
+### スコープ設定
+
+```python
+@pytest.fixture(scope="function")  # デフォルト：各テストごと
+def func_fixture():
+    pass
+
+@pytest.fixture(scope="class")  # クラスごと
+def class_fixture():
+    pass
+
+@pytest.fixture(scope="module")  # モジュール（ファイル）ごと
+def module_fixture():
+    pass
+
+@pytest.fixture(scope="session")  # テストセッション全体で1回
+def session_fixture():
+    pass
+```
+
+### autouse（自動実行）
+
+```python
+@pytest.fixture(autouse=True)
+def setup_and_teardown():
+    """全テストで自動実行"""
+    print("テスト前処理")
+    yield
+    print("テスト後処理")
+```
+
+### conftest.py（共有フィクスチャ）
+
+```python
+# tests/conftest.py
+import pytest
+
+@pytest.fixture
+def shared_data():
+    """全テストファイルで使えるフィクスチャ"""
+    return {"key": "value"}
+```
+
+---
+
+## 🔁 パラメータ化テスト
+
+### 基本のパラメータ化
+
+```python
+@pytest.mark.parametrize("input,expected", [
+    (1, 2),
+    (2, 4),
+    (3, 6),
+])
+def test_double(input, expected):
+    assert input * 2 == expected
+```
+
+### 複数パラメータ
+
+```python
+@pytest.mark.parametrize("x", [1, 2, 3])
+@pytest.mark.parametrize("y", [10, 20])
+def test_multiply(x, y):
+    assert x * y == y * x
+```
+
+### パラメータにIDを付ける
+
+```python
+@pytest.mark.parametrize("input,expected", [
+    (1, 2),
+    (2, 4),
+    (3, 6),
+], ids=["one", "two", "three"])
+def test_double(input, expected):
+    assert input * 2 == expected
+```
+
+### 辞書形式
+
+```python
+test_data = [
+    {"input": 1, "expected": 2},
+    {"input": 2, "expected": 4},
+    {"input": 3, "expected": 6},
+]
+
+@pytest.mark.parametrize("data", test_data)
+def test_double(data):
+    assert data["input"] * 2 == data["expected"]
+```
+
+---
+
+## 🚨 例外テスト
+
+### 例外が発生することを確認
+
+```python
+import pytest
+
+def test_zero_division():
+    with pytest.raises(ZeroDivisionError):
+        1 / 0
+
+# エラーメッセージも確認
+def test_value_error():
+    with pytest.raises(ValueError, match="invalid literal"):
+        int("abc")
+
+# 例外オブジェクトを取得
+def test_custom_exception():
+    with pytest.raises(ValueError) as exc_info:
+        raise ValueError("エラーです")
+    
+    assert "エラー" in str(exc_info.value)
+```
+
+### 例外が発生しないことを確認
+
+```python
+def test_no_exception():
+    try:
+        result = 10 / 2
+        assert result == 5
+    except Exception as e:
+        pytest.fail(f"例外が発生しました: {e}")
+```
+
+---
+
+## 🏷️ マーカー
+
+### 基本マーカー
+
+```python
+# スキップ
+@pytest.mark.skip(reason="まだ実装していない")
+def test_future_feature():
+    pass
+
+# 条件付きスキップ
+import sys
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Python 3.8以上が必要")
+def test_new_feature():
+    pass
+
+# 失敗が予想されるテスト
+@pytest.mark.xfail(reason="既知のバグ")
+def test_known_bug():
+    assert False
+```
+
+### カスタムマーカー
+
+```python
+# pytest.ini または pyproject.toml で定義
+# markers =
+#     slow: 時間がかかるテスト
+#     integration: 統合テスト
+
+@pytest.mark.slow
+def test_heavy_computation():
+    # 時間がかかる処理
+    pass
+
+@pytest.mark.integration
+def test_api_integration():
+    # API統合テスト
+    pass
+```
+
+```bash
+# 特定のマーカーのみ実行
+pytest -m slow
+pytest -m "not slow"
+pytest -m "integration and not slow"
+```
+
+---
+
+## 🎭 モック
+
+### 基本のモック
+
+```python
+from unittest.mock import Mock, patch
+
+def test_mock_basic():
+    mock_obj = Mock()
+    mock_obj.method.return_value = 42
+    
+    result = mock_obj.method()
+    assert result == 42
+    mock_obj.method.assert_called_once()
+```
+
+### 関数のモック
+
+```python
+from unittest.mock import patch
+
+def get_user_name():
+    # 外部APIを呼ぶ関数
+    return fetch_from_api()
+
+@patch('module.fetch_from_api')
+def test_get_user_name(mock_fetch):
+    mock_fetch.return_value = "太郎"
+    
+    result = get_user_name()
+    assert result == "太郎"
+```
+
+### クラスメソッドのモック
+
+```python
+@patch('module.ClassName.method_name')
+def test_class_method(mock_method):
+    mock_method.return_value = "モック結果"
+    # テストコード
+```
+
+### 複数のモック
+
+```python
+@patch('module.function_b')
+@patch('module.function_a')
+def test_multiple_mocks(mock_a, mock_b):
+    # 注意: デコレータは下から上の順で適用される
+    mock_a.return_value = 1
+    mock_b.return_value = 2
+```
+
+### モックの検証
+
+```python
+def test_mock_verification():
+    mock = Mock()
+    mock.method(1, 2, key="value")
+    
+    # 呼び出し回数
+    mock.method.assert_called_once()
+    mock.method.assert_called_once_with(1, 2, key="value")
+    
+    # 複数回呼び出し
+    mock.method(3, 4)
+    assert mock.method.call_count == 2
+    
+    # 呼び出し引数の確認
+    mock.method.assert_any_call(1, 2, key="value")
+```
+
+---
+
+## 🎮 実行オプション
+
+### 基本コマンド
+
+```bash
+# すべてのテスト実行
+pytest
+
+# 特定のファイル
+pytest test_user.py
+
+# 特定のクラス
+pytest test_user.py::TestUser
+
+# 特定のメソッド
+pytest test_user.py::TestUser::test_login
+
+# パターンマッチ
+pytest -k "login"  # loginを含むテストのみ
+pytest -k "not slow"  # slowを含まないテストのみ
+```
+
+### 出力オプション
+
+```bash
+# 詳細表示
+pytest -v
+
+# 超詳細表示
+pytest -vv
+
+# 簡潔表示
+pytest -q
+
+# 失敗したテストの詳細を表示
+pytest -l
+
+# 標準出力も表示
+pytest -s
+
+# 最初の失敗で停止
+pytest -x
+
+# N個失敗したら停止
+pytest --maxfail=3
+```
+
+### カバレッジ
+
+```bash
+# カバレッジ計測
+pytest --cov=src
+
+# HTMLレポート生成
+pytest --cov=src --cov-report=html
+
+# ターミナルで詳細表示
+pytest --cov=src --cov-report=term-missing
+```
+
+### 実行速度
+
+```bash
+# 並列実行（pytest-xdist必要）
+pip install pytest-xdist
+pytest -n auto  # CPU数に応じて自動
+
+# 遅いテストを表示
+pytest --durations=10
+```
+
+### その他
+
+```bash
+# 前回失敗したテストのみ再実行
+pytest --lf
+
+# 前回失敗したテストから実行
+pytest --ff
+
+# ドライラン（実際には実行しない）
+pytest --collect-only
+
+# テストの一覧を表示
+pytest --collect-only -q
+```
+
+---
+
+## 🛠️ 便利なテクニック
+
+### capsys（標準出力のキャプチャ）
+
+```python
+def test_print_output(capsys):
+    print("Hello, World!")
+    captured = capsys.readouterr()
+    assert "Hello" in captured.out
+    assert captured.err == ""  # エラー出力
+```
+
+### tmpdir（一時ディレクトリ）
+
+```python
+def test_file_operations(tmpdir):
+    # 一時ファイル作成
+    file = tmpdir.join("test.txt")
+    file.write("テストデータ")
+    
+    # 読み込み
+    assert file.read() == "テストデータ"
+    # テスト後、自動的に削除される
+```
+
+### monkeypatch（動的なパッチ）
+
+```python
+def test_env_variable(monkeypatch):
+    # 環境変数を一時的に設定
+    monkeypatch.setenv("API_KEY", "test_key")
+    
+    import os
+    assert os.getenv("API_KEY") == "test_key"
+    # テスト後、自動的に元に戻る
+```
+
+### テスト間でデータを共有
+
+```python
+import pytest
+
+class TestDataSharing:
+    @pytest.fixture(scope="class")
+    def shared_resource(self):
+        return {"counter": 0}
+    
+    def test_first(self, shared_resource):
+        shared_resource["counter"] += 1
+        assert shared_resource["counter"] == 1
+    
+    def test_second(self, shared_resource):
+        shared_resource["counter"] += 1
+        assert shared_resource["counter"] == 2
+```
+
+### 複数のassertをグループ化
+
+```python
+def test_multiple_checks():
+    user = {"name": "太郎", "age": 30, "email": "test@example.com"}
+    
+    assert user["name"] == "太郎", "名前が一致しません"
+    assert user["age"] == 30, "年齢が一致しません"
+    assert "@" in user["email"], "メールアドレスが不正です"
+```
+
+### テストデータの外部ファイル化
+
+```python
+import json
+import pytest
+
+@pytest.fixture
+def test_data():
+    with open('tests/data/test_data.json') as f:
+        return json.load(f)
+
+def test_with_external_data(test_data):
+    assert test_data["expected_result"] == 42
+```
+
+---
+
+## 📝 pytest.ini 設定ファイル
+
+```ini
+# pytest.ini
+[pytest]
+# テストディレクトリ
+testpaths = tests
+
+# Pythonパス
+pythonpath = src
+
+# マーカー定義
+markers =
+    slow: 時間がかかるテスト
+    integration: 統合テスト
+    unit: 単体テスト
+
+# 実行オプション
+addopts = 
+    -v
+    --strict-markers
+    --cov=src
+    --cov-report=html
+
+# 警告フィルタ
+filterwarnings =
+    ignore::DeprecationWarning
+```
+
+---
+
+## 🎯 ベストプラクティス
+
+### テスト構造（AAA パターン）
+
+```python
+def test_user_registration():
+    # Arrange（準備）
+    username = "test_user"
+    email = "test@example.com"
+    
+    # Act（実行）
+    user = create_user(username, email)
+    
+    # Assert（検証）
+    assert user.username == username
+    assert user.email == email
+    assert user.is_active is True
+```
+
+### テスト命名規則
+
+```python
+# ❌ 悪い例
+def test1():
+    pass
+
+def test_func():
+    pass
+
+# ✅ 良い例
+def test_user_login_with_valid_credentials():
+    pass
+
+def test_user_login_with_invalid_password_returns_error():
+    pass
+
+def test_empty_cart_total_is_zero():
+    pass
+```
+
+### 1テスト1検証
+
+```python
+# ❌ 悪い例：1つのテストで複数の機能をテスト
+def test_user_operations():
+    user = create_user()
+    assert user.name == "太郎"
+    
+    user.update_email("new@example.com")
+    assert user.email == "new@example.com"
+    
+    user.delete()
+    assert user.is_deleted is True
+
+# ✅ 良い例：機能ごとに分割
+def test_user_creation():
+    user = create_user()
+    assert user.name == "太郎"
+
+def test_user_email_update():
+    user = create_user()
+    user.update_email("new@example.com")
+    assert user.email == "new@example.com"
+
+def test_user_deletion():
+    user = create_user()
+    user.delete()
+    assert user.is_deleted is True
+```
+
+---
+
+## 📚 よく使うコマンド早見表
+
+| コマンド | 説明 |
+|---------|------|
+| `pytest` | すべてのテスト実行 |
+| `pytest -v` | 詳細表示 |
+| `pytest -x` | 最初の失敗で停止 |
+| `pytest -k login` | loginを含むテストのみ |
+| `pytest -m slow` | slowマーカーのみ |
+| `pytest --lf` | 前回失敗したテストのみ |
+| `pytest --cov=src` | カバレッジ計測 |
+| `pytest -n auto` | 並列実行 |
+| `pytest --durations=10` | 遅いテスト表示 |
+| `pytest --collect-only` | テスト一覧表示 |
+
+---
+
+## 🔗 参考リンク
+
+- 公式ドキュメント: https://docs.pytest.org/
+- pytest-cov: https://pytest-cov.readthedocs.io/
+- pytest-mock: https://pytest-mock.readthedocs.io/
+
+---
+
+**最終更新: 2024年11月**
