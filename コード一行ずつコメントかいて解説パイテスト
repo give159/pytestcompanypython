@@ -1,0 +1,686 @@
+"""
+会社管理システムのpytestテストコード
+
+元のコードをテストするためのpytestテストスイートです。
+"""
+
+# pytestフレームワークをインポート（テスト実行の基本機能を提供）
+import pytest
+
+# unittest.mockからpatchをインポート（関数やメソッドをモック化するために使用）
+# 今回のコードでは実際には使用していないが、将来の拡張のためにインポート
+from unittest.mock import patch
+
+# テスト対象のモジュールから必要なクラスと列挙型をインポート
+from company_management import (
+    Gender,    # 性別を表す列挙型
+    Post,      # 役職を表す列挙型
+    Human,     # 人間の基底クラス
+    Employee,  # 社員クラス
+    President, # 社長クラス
+    Company    # 会社クラス
+)
+
+
+# Gender列挙型のテストクラス
+# クラス名は「Test」で始める必要がある（pytestの命名規則）
+class TestGenderEnum:
+    """Gender列挙型のテスト"""
+
+    # テストメソッド名は「test_」で始める必要がある（pytestの命名規則）
+    def test_gender_values(self):
+        """性別の値が正しいことを確認"""
+        # Gender.MAN.valueが"男性"と等しいことを確認
+        assert Gender.MAN.value == "男性"
+        # Gender.WOMAN.valueが"女性"と等しいことを確認
+        assert Gender.WOMAN.value == "女性"
+        # Gender.OTHER.valueが"その他"と等しいことを確認
+        assert Gender.OTHER.value == "その他"
+
+
+# Post列挙型のテストクラス
+class TestPostEnum:
+    """Post列挙型のテスト"""
+
+    def test_post_values(self):
+        """役職の値が正しいことを確認"""
+        # Post.HIRA.valueが"ヒラ"と等しいことを確認
+        assert Post.HIRA.value == "ヒラ"
+        # Post.SYUNIN.valueが"主任"と等しいことを確認
+        assert Post.SYUNIN.value == "主任"
+        # Post.KATYO.valueが"課長"と等しいことを確認
+        assert Post.KATYO.value == "課長"
+        # Post.YARUIN.valueが"役員"と等しいことを確認
+        assert Post.YARUIN.value == "役員"
+
+
+# Humanクラスのテストクラス
+class TestHuman:
+    """Humanクラスのテスト"""
+
+    def test_human_initialization(self):
+        """Humanの初期化テスト"""
+        # Humanオブジェクトを作成（名前、性別、年齢を指定）
+        human = Human("山田太郎", Gender.MAN, 30)
+        
+        # nameプロパティが"山田太郎"と等しいことを確認
+        assert human.name == "山田太郎"
+        # genderプロパティがGender.MANと等しいことを確認
+        assert human.gender == Gender.MAN
+        # ageプロパティが30と等しいことを確認
+        assert human.age == 30
+
+    # capsysはpytestのフィクスチャで、標準出力をキャプチャする機能を提供
+    def test_human_self_introduction(self, capsys):
+        """自己紹介のテスト"""
+        # Humanオブジェクトを作成
+        human = Human("山田花子", Gender.WOMAN, 25)
+        # 自己紹介メソッドを実行（内部でprint文が実行される）
+        human.do_self_introduction()
+        
+        # capsys.readouterr()で標準出力の内容を取得
+        # captured.outに出力された文字列が格納される
+        captured = capsys.readouterr()
+        
+        # 出力に"山田花子"が含まれていることを確認
+        assert "山田花子" in captured.out
+        # 出力に"女性"が含まれていることを確認
+        assert "女性" in captured.out
+        # 出力に"25歳"が含まれていることを確認
+        assert "25歳" in captured.out
+
+
+# Employeeクラスのテストクラス
+class TestEmployee:
+    """Employeeクラスのテスト"""
+
+    def test_employee_initialization(self):
+        """社員の初期化テスト"""
+        # Employeeオブジェクトを作成（名前、性別、年齢、役職を指定）
+        employee = Employee("佐藤太郎", Gender.MAN, 22, Post.HIRA)
+        
+        # nameプロパティが"佐藤太郎"と等しいことを確認
+        assert employee.name == "佐藤太郎"
+        # genderプロパティがGender.MANと等しいことを確認
+        assert employee.gender == Gender.MAN
+        # ageプロパティが22と等しいことを確認
+        assert employee.age == 22
+        # postプロパティがPost.HIRAと等しいことを確認
+        assert employee.post == Post.HIRA
+        
+        # idプロパティの長さが4文字であることを確認（ランダムな4桁の数字）
+        assert len(employee.id) == 4
+        # idプロパティが数字のみで構成されていることを確認
+        assert employee.id.isdigit()
+
+    def test_employee_salary(self):
+        """給与のテスト"""
+        # 各役職の社員を作成
+        # ヒラ社員を作成
+        hira = Employee("A", Gender.MAN, 25, Post.HIRA)
+        # 主任を作成
+        syunin = Employee("B", Gender.MAN, 30, Post.SYUNIN)
+        # 課長を作成
+        katyo = Employee("C", Gender.MAN, 35, Post.KATYO)
+        # 役員を作成
+        yaruin = Employee("D", Gender.MAN, 40, Post.YARUIN)
+
+        # ヒラ社員の給与が200,000円であることを確認
+        assert hira.salary == 200000
+        # 主任の給与が300,000円であることを確認
+        assert syunin.salary == 300000
+        # 課長の給与が450,000円であることを確認
+        assert katyo.salary == 450000
+        # 役員の給与が600,000円であることを確認
+        assert yaruin.salary == 600000
+
+    # capsysで標準出力をキャプチャ
+    def test_employee_self_introduction(self, capsys):
+        """社員の自己紹介テスト"""
+        # 主任の社員を作成
+        employee = Employee("田中三郎", Gender.MAN, 33, Post.SYUNIN)
+        # 自己紹介メソッドを実行
+        employee.do_self_introduction()
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        
+        # 出力に"田中三郎"が含まれていることを確認
+        assert "田中三郎" in captured.out
+        # 出力に"男性"が含まれていることを確認
+        assert "男性" in captured.out
+        # 出力に"33歳"が含まれていることを確認
+        assert "33歳" in captured.out
+        # 出力に"主任"が含まれていることを確認
+        assert "主任" in captured.out
+
+    # capsysで標準出力をキャプチャ（昇進メッセージの確認のため）
+    def test_employee_promote(self, capsys):
+        """昇進テスト"""
+        # ヒラ社員を作成
+        employee = Employee("昇進太郎", Gender.MAN, 30, Post.HIRA)
+        
+        # 1回目の昇進（ヒラ → 主任）
+        employee.promote()
+        # 役職が主任になったことを確認
+        assert employee.post == Post.SYUNIN
+        
+        # 2回目の昇進（主任 → 課長）
+        employee.promote()
+        # 役職が課長になったことを確認
+        assert employee.post == Post.KATYO
+        
+        # 3回目の昇進（課長 → 役員）
+        employee.promote()
+        # 役職が役員になったことを確認
+        assert employee.post == Post.YARUIN
+        
+        # 最高役職での昇進試行（役員 → 役員のまま）
+        employee.promote()
+        # 役職が役員のままであることを確認（変化なし）
+        assert employee.post == Post.YARUIN
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        # 出力に"すでに最高役職"というメッセージが含まれていることを確認
+        assert "すでに最高役職" in captured.out
+
+    # capsysで標準出力をキャプチャ（降格メッセージの確認のため）
+    def test_employee_demote(self, capsys):
+        """降格テスト"""
+        # 役員を作成
+        employee = Employee("降格太郎", Gender.MAN, 40, Post.YARUIN)
+        
+        # 1回目の降格（役員 → 課長）
+        employee.demote()
+        # 役職が課長になったことを確認
+        assert employee.post == Post.KATYO
+        
+        # 2回目の降格（課長 → 主任）
+        employee.demote()
+        # 役職が主任になったことを確認
+        assert employee.post == Post.SYUNIN
+        
+        # 3回目の降格（主任 → ヒラ）
+        employee.demote()
+        # 役職がヒラになったことを確認
+        assert employee.post == Post.HIRA
+        
+        # 最低役職での降格試行（ヒラ → ヒラのまま）
+        employee.demote()
+        # 役職がヒラのままであることを確認（変化なし）
+        assert employee.post == Post.HIRA
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        # 出力に"すでに最低役職"というメッセージが含まれていることを確認
+        assert "すでに最低役職" in captured.out
+
+
+# Presidentクラスのテストクラス
+class TestPresident:
+    """Presidentクラスのテスト"""
+
+    def test_president_initialization(self):
+        """社長の初期化テスト"""
+        # Presidentオブジェクトを作成
+        president = President("倍井杉蔵", Gender.MAN, 88)
+        
+        # nameプロパティが"倍井杉蔵"と等しいことを確認
+        assert president.name == "倍井杉蔵"
+        # genderプロパティがGender.MANと等しいことを確認
+        assert president.gender == Gender.MAN
+        # ageプロパティが88と等しいことを確認
+        assert president.age == 88
+        # salaryプロパティが1,000,000円であることを確認
+        assert president.salary == 1000000
+        # companyプロパティが初期状態でNoneであることを確認
+        assert president.company is None
+
+    # capsysで標準出力をキャプチャ
+    def test_president_self_introduction(self, capsys):
+        """社長の自己紹介テスト"""
+        # Presidentオブジェクトを作成
+        president = President("社長太郎", Gender.MAN, 60)
+        # 自己紹介メソッドを実行
+        president.do_self_introduction()
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        
+        # 出力に"社長太郎"が含まれていることを確認
+        assert "社長太郎" in captured.out
+        # 出力に"男性"が含まれていることを確認
+        assert "男性" in captured.out
+        # 出力に"60歳"が含まれていることを確認
+        assert "60歳" in captured.out
+        # 出力に"社長"が含まれていることを確認
+        assert "社長" in captured.out
+
+    def test_president_company_setter(self):
+        """会社設定のテスト"""
+        # Presidentオブジェクトを作成
+        president = President("社長太郎", Gender.MAN, 60)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentのcompanyプロパティにcompanyを設定
+        president.company = company
+        
+        # presidentのcompanyプロパティが設定したcompanyと同じであることを確認
+        assert president.company == company
+
+    def test_president_get_personnel_by_name(self):
+        """名前で社員検索テスト"""
+        # Presidentオブジェクトを作成
+        president = President("社長太郎", Gender.MAN, 60)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentにcompanyを設定
+        president.company = company
+        
+        # 会社に社員を追加
+        company.add_employee("佐藤太郎", Gender.MAN, 30, Post.HIRA)
+        
+        # 存在する社員を名前で検索
+        found = president.get_personnel_by_name("佐藤太郎")
+        # 検索結果がNoneでないことを確認（社員が見つかった）
+        assert found is not None
+        # 検索された社員の名前が"佐藤太郎"であることを確認
+        assert found.name == "佐藤太郎"
+        
+        # 存在しない社員を名前で検索
+        not_found = president.get_personnel_by_name("存在しない人")
+        # 検索結果がNoneであることを確認（社員が見つからなかった）
+        assert not_found is None
+
+    def test_president_get_personnel_by_id(self):
+        """IDで社員検索テスト"""
+        # Presidentオブジェクトを作成
+        president = President("社長太郎", Gender.MAN, 60)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentにcompanyを設定
+        president.company = company
+        
+        # 会社に社員を追加
+        company.add_employee("鈴木次郎", Gender.MAN, 25, Post.HIRA)
+        # 追加された社員のオブジェクトを取得（リストの最初の要素）
+        employee = company.employees[0]
+        
+        # 社員のIDで検索
+        found = president.get_personnel_by_id(employee.id)
+        # 検索結果がNoneでないことを確認（社員が見つかった）
+        assert found is not None
+        # 検索された社員のIDが元の社員のIDと同じであることを確認
+        assert found.id == employee.id
+
+    # capsysで標準出力をキャプチャ（採用メッセージの確認のため）
+    def test_president_add_employee(self, capsys):
+        """社長による社員追加テスト"""
+        # Presidentオブジェクトを作成
+        president = President("社長太郎", Gender.MAN, 60)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentにcompanyを設定
+        president.company = company
+        
+        # presidentのadd_employeeメソッドで社員を追加
+        president.add_employee("新入社員", Gender.MAN, 22, Post.HIRA)
+        # 会社の現在の社員数が1人であることを確認
+        assert company.current_number == 1
+
+    # capsysで標準出力をキャプチャ（削除メッセージの確認のため）
+    def test_president_delete_employee(self, capsys):
+        """社長による社員削除テスト"""
+        # Presidentオブジェクトを作成
+        president = President("社長太郎", Gender.MAN, 60)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentにcompanyを設定
+        president.company = company
+        
+        # 会社に社員を追加
+        company.add_employee("削除対象", Gender.MAN, 30, Post.HIRA)
+        # 追加された社員のオブジェクトを取得
+        employee = company.employees[0]
+        
+        # presidentのdelete_employeeメソッドで社員を削除
+        president.delete_employee(employee)
+        # 会社の現在の社員数が0人であることを確認
+        assert company.current_number == 0
+
+    # capsysで標準出力をキャプチャ（辞任メッセージの確認のため）
+    def test_president_resignation_with_employees(self, capsys):
+        """社員がいる場合の辞任テスト"""
+        # Presidentオブジェクトを作成
+        president = President("旧社長", Gender.MAN, 70)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentにcompanyを設定
+        president.company = company
+        
+        # 会社に役員を追加（次期社長候補）
+        company.add_employee("次期社長", Gender.MAN, 50, Post.YARUIN)
+        
+        # presidentが辞任し、新しい社長が選出される
+        new_president = president.resignation()
+        
+        # 新しい社長がNoneでないことを確認（辞任が成功した）
+        assert new_president is not None
+        # 新しい社長の名前が"次期社長"であることを確認
+        assert new_president.name == "次期社長"
+        # 新しい社長のcompanyプロパティが元のcompanyと同じであることを確認
+        assert new_president.company == company
+        # 辞任後、次期社長は社員リストから削除されるため、社員数が0になる
+        assert company.current_number == 0  # 次期社長は社員リストから削除される
+
+    # capsysで標準出力をキャプチャ（エラーメッセージの確認のため）
+    def test_president_resignation_without_employees(self, capsys):
+        """社員がいない場合の辞任テスト"""
+        # Presidentオブジェクトを作成
+        president = President("孤独な社長", Gender.MAN, 70)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentにcompanyを設定
+        president.company = company
+        
+        # 社員がいない状態で辞任を試みる
+        new_president = president.resignation()
+        
+        # 新しい社長がNoneであることを確認（辞任できなかった）
+        assert new_president is None
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        # 出力に"辞任しないでください"というメッセージが含まれていることを確認
+        assert "辞任しないでください" in captured.out
+
+
+# Companyクラスのテストクラス
+class TestCompany:
+    """Companyクラスのテスト"""
+
+    def test_company_initialization(self):
+        """会社の初期化テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        
+        # 初期状態で社員数が0人であることを確認
+        assert company.current_number == 0
+        # 初期状態で社員リストの長さが0であることを確認
+        assert len(company.employees) == 0
+        # 最大社員数が10人であることを確認（クラス変数）
+        assert company.MAX_NUMBER_OF_PEOPLE == 10
+
+    # capsysで標準出力をキャプチャ（採用メッセージの確認のため）
+    def test_company_add_employee(self, capsys):
+        """社員追加テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 会社に社員を追加
+        company.add_employee("新入社員", Gender.MAN, 22, Post.HIRA)
+        
+        # 社員数が1人になったことを確認
+        assert company.current_number == 1
+        # 社員リストの最初の要素の名前が"新入社員"であることを確認
+        assert company.employees[0].name == "新入社員"
+
+    # capsysで標準出力をキャプチャ（上限エラーメッセージの確認のため）
+    def test_company_add_employee_max_limit(self, capsys):
+        """社員数上限テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        
+        # 上限（10人）まで社員を追加
+        # range(10)で0から9までループし、10人の社員を追加
+        for i in range(Company.MAX_NUMBER_OF_PEOPLE):
+            # f文字列を使って"社員0", "社員1", ...と名前を生成
+            company.add_employee(f"社員{i}", Gender.MAN, 25, Post.HIRA)
+        
+        # 社員数が上限（10人）になったことを確認
+        assert company.current_number == Company.MAX_NUMBER_OF_PEOPLE
+        
+        # 上限を超えて追加しようとする（11人目）
+        company.add_employee("超過社員", Gender.MAN, 30, Post.HIRA)
+        # 社員数が上限（10人）のままであることを確認（追加されていない）
+        assert company.current_number == Company.MAX_NUMBER_OF_PEOPLE
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        # 出力に"上限"というメッセージが含まれていることを確認
+        assert "上限" in captured.out
+
+    # capsysで標準出力をキャプチャ（削除メッセージの確認のため）
+    def test_company_delete_employee(self, capsys):
+        """社員削除テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 会社に社員を追加
+        company.add_employee("削除対象", Gender.MAN, 30, Post.HIRA)
+        # 追加された社員のオブジェクトを取得
+        employee = company.employees[0]
+        
+        # 社員を削除
+        company.delete_employee(employee)
+        # 社員数が0人になったことを確認
+        assert company.current_number == 0
+
+    # capsysで標準出力をキャプチャ（エラーメッセージの確認のため）
+    def test_company_delete_nonexistent_employee(self, capsys):
+        """存在しない社員の削除テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 会社に登録されていない社員を作成
+        fake_employee = Employee("存在しない", Gender.MAN, 30, Post.HIRA)
+        
+        # 存在しない社員を削除しようとする
+        company.delete_employee(fake_employee)
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        # 出力に"存在しません"というメッセージが含まれていることを確認
+        assert "存在しません" in captured.out
+
+    def test_company_get_personnel_by_name(self):
+        """名前で社員検索テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 会社に社員を追加
+        company.add_employee("検索対象", Gender.WOMAN, 28, Post.SYUNIN)
+        
+        # 存在する社員を名前で検索
+        found = company.get_personnel_by_name("検索対象")
+        # 検索結果がNoneでないことを確認（社員が見つかった）
+        assert found is not None
+        # 検索された社員の名前が"検索対象"であることを確認
+        assert found.name == "検索対象"
+        
+        # 存在しない社員を名前で検索
+        not_found = company.get_personnel_by_name("存在しない")
+        # 検索結果がNoneであることを確認（社員が見つからなかった）
+        assert not_found is None
+
+    def test_company_get_personnel_by_id(self):
+        """IDで社員検索テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 会社に社員を追加
+        company.add_employee("ID検索", Gender.MAN, 30, Post.HIRA)
+        # 追加された社員のオブジェクトを取得
+        employee = company.employees[0]
+        
+        # 社員のIDで検索
+        found = company.get_personnel_by_id(employee.id)
+        # 検索結果がNoneでないことを確認（社員が見つかった）
+        assert found is not None
+        # 検索された社員のIDが元の社員のIDと同じであることを確認
+        assert found.id == employee.id
+
+    def test_company_select_president_with_executive(self):
+        """役員がいる場合の次期社長選出テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 若手役員を追加（45歳）
+        company.add_employee("若手役員", Gender.MAN, 45, Post.YARUIN)
+        # ベテラン役員を追加（55歳）
+        company.add_employee("ベテラン役員", Gender.MAN, 55, Post.YARUIN)
+        # 平社員を追加（60歳、役員より年長だが役職は低い）
+        company.add_employee("平社員", Gender.MAN, 60, Post.HIRA)
+        
+        # 次期社長を選出（役員の中から最年長を選ぶ）
+        next_president = company.select_president()
+        
+        # 次期社長がNoneでないことを確認（選出が成功した）
+        assert next_president is not None
+        # 次期社長の役職が役員であることを確認
+        assert next_president.post == Post.YARUIN
+        # 次期社長の年齢が55歳であることを確認（役員の中で最年長）
+        assert next_president.age == 55  # 役員の中で最年長
+
+    def test_company_select_president_without_executive(self):
+        """役員がいない場合の次期社長選出テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 若手社員を追加（25歳、ヒラ）
+        company.add_employee("若手", Gender.MAN, 25, Post.HIRA)
+        # 中堅社員を追加（35歳、主任）
+        company.add_employee("中堅", Gender.MAN, 35, Post.SYUNIN)
+        # ベテラン社員を追加（50歳、課長）
+        company.add_employee("ベテラン", Gender.MAN, 50, Post.KATYO)
+        
+        # 次期社長を選出（役員がいないので、全社員の中から最年長を選ぶ）
+        next_president = company.select_president()
+        
+        # 次期社長がNoneでないことを確認（選出が成功した）
+        assert next_president is not None
+        # 次期社長の年齢が50歳であることを確認（全社員の中で最年長）
+        assert next_president.age == 50  # 全社員の中で最年長
+
+    def test_company_select_president_empty(self):
+        """社員がいない場合の次期社長選出テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        
+        # 社員がいない状態で次期社長を選出しようとする
+        next_president = company.select_president()
+        # 次期社長がNoneであることを確認（社員がいないので選出できない）
+        assert next_president is None
+
+    # capsysで標準出力をキャプチャ（一覧表示の確認のため）
+    def test_company_display_all_employees(self, capsys):
+        """社員一覧表示テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        # 男性社員を追加
+        company.add_employee("表示太郎", Gender.MAN, 30, Post.HIRA)
+        # 女性社員を追加
+        company.add_employee("表示花子", Gender.WOMAN, 28, Post.SYUNIN)
+        
+        # 社員一覧を表示（内部でprint文が実行される）
+        company.display_all_employees()
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        
+        # 出力に"社員一覧"というタイトルが含まれていることを確認
+        assert "社員一覧" in captured.out
+        # 出力に"表示太郎"が含まれていることを確認
+        assert "表示太郎" in captured.out
+        # 出力に"表示花子"が含まれていることを確認
+        assert "表示花子" in captured.out
+        # 出力に"合計: 2名"が含まれていることを確認
+        assert "合計: 2名" in captured.out
+
+    # capsysで標準出力をキャプチャ（空のメッセージの確認のため）
+    def test_company_display_empty_employees(self, capsys):
+        """社員がいない場合の一覧表示テスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        
+        # 社員がいない状態で一覧を表示
+        company.display_all_employees()
+        
+        # 標準出力の内容を取得
+        captured = capsys.readouterr()
+        
+        # 出力に"社員がいません"というメッセージが含まれていることを確認
+        assert "社員がいません" in captured.out
+
+
+# 統合テストクラス（複数の機能を組み合わせたテスト）
+class TestIntegration:
+    """統合テスト"""
+
+    # capsysで標準出力をキャプチャ
+    def test_complete_workflow(self, capsys):
+        """完全なワークフローのテスト"""
+        # === 準備フェーズ ===
+        # 会社と社長の作成
+        # Presidentオブジェクトを作成
+        president = President("統合テスト社長", Gender.MAN, 65)
+        # Companyオブジェクトを作成
+        company = Company()
+        # presidentにcompanyを設定
+        president.company = company
+        
+        # === 社員追加フェーズ ===
+        # 複数の社員を追加
+        # ヒラ社員を追加
+        president.add_employee("社員A", Gender.MAN, 30, Post.HIRA)
+        # 主任を追加
+        president.add_employee("社員B", Gender.WOMAN, 35, Post.SYUNIN)
+        # 役員を追加
+        president.add_employee("社員C", Gender.MAN, 45, Post.YARUIN)
+        
+        # 社員数が3人になったことを確認
+        assert company.current_number == 3
+        
+        # === 検索と昇進フェーズ ===
+        # 検索と昇進
+        # "社員A"を名前で検索
+        employee = president.get_personnel_by_name("社員A")
+        # 社員が見つかったことを確認
+        assert employee is not None
+        # 社員を昇進させる（ヒラ → 主任）
+        employee.promote()
+        # 役職が主任になったことを確認
+        assert employee.post == Post.SYUNIN
+        
+        # === 辞任フェーズ ===
+        # 辞任と新社長就任
+        # presidentが辞任し、新しい社長を選出
+        new_president = president.resignation()
+        
+        # 新しい社長が選出されたことを確認
+        assert new_president is not None
+        # 新しい社長の名前が"社員C"であることを確認（役員の中で最年長）
+        assert new_president.name == "社員C"
+        # 社員数が2人になったことを確認（新社長は社員リストから削除される）
+        assert company.current_number == 2  # 新社長は社員リストから削除
+
+    def test_edge_cases(self):
+        """エッジケースのテスト"""
+        # Companyオブジェクトを作成
+        company = Company()
+        
+        # === 空の会社での検索テスト ===
+        # 空の会社での検索
+        # 社員がいない状態で名前検索をするとNoneが返ることを確認
+        assert company.get_personnel_by_name("誰もいない") is None
+        # 社員がいない状態でID検索をするとNoneが返ることを確認
+        assert company.get_personnel_by_id("0000") is None
+        
+        # === 空の会社での次期社長選出テスト ===
+        # 次期社長選出（社員なし）
+        # 社員がいない状態で次期社長を選出しようとするとNoneが返ることを確認
+        assert company.select_president() is None
+
+
+# このブロックは、このファイルを直接実行した場合にのみ実行される
+# 他のファイルからインポートされた場合は実行されない
+if __name__ == "__main__":
+    # pytest.main()でpytestをプログラムから実行
+    # [__file__, "-v"]は引数のリスト
+    # __file__: 現在のファイル名（このテストファイル）
+    # "-v": verbose（詳細表示）オプション
+    pytest.main([__file__, "-v"])
