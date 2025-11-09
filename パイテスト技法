@@ -1,0 +1,373 @@
+# pytest文法解説 - 新人エンジニア向け
+
+## 目次
+1. [pytestとは](#pytestとは)
+2. [基本構造](#基本構造)
+3. [主要な文法要素](#主要な文法要素)
+4. [実例で学ぶ](#実例で学ぶ)
+
+---
+
+## pytestとは
+
+**pytest**は、Pythonで最も人気のあるテストフレームワークです。シンプルで読みやすいテストコードが書けます。
+
+### pytestの特徴
+- ✅ シンプルな`assert`文でテストを書ける
+- ✅ 自動的にテスト関数を検出
+- ✅ 詳細なエラーメッセージ
+- ✅ フィクスチャで共通処理を簡単に管理
+
+---
+
+## 基本構造
+
+### 1. インポート文
+
+```python
+import pytest
+from unittest.mock import patch
+from company_management import Gender, Post, Human
+```
+
+**解説:**
+- `pytest`: pytestフレームワークをインポート
+- `unittest.mock`: モック機能（今回は未使用だが、将来の拡張用）
+- `from company_management import ...`: テスト対象のクラスをインポート
+
+---
+
+### 2. テストクラスの定義
+
+```python
+class TestEmployee:
+    """Employeeクラスのテスト"""
+    
+    def test_employee_initialization(self):
+        """社員の初期化テスト"""
+        # テストコード
+```
+
+**重要なルール:**
+- ✅ クラス名は`Test`で始める（例: `TestEmployee`）
+- ✅ テストメソッド名は`test_`で始める（例: `test_employee_initialization`）
+- ✅ docstringでテストの目的を説明
+
+**なぜクラスでまとめるの？**
+- 関連するテストをグループ化できる
+- テストの構造が分かりやすい
+- 共通のセットアップを共有できる
+
+---
+
+## 主要な文法要素
+
+### 3. assert文（アサーション）
+
+```python
+def test_employee_initialization(self):
+    employee = Employee("佐藤太郎", Gender.MAN, 22, Post.HIRA)
+    
+    # 等しいことを確認
+    assert employee.name == "佐藤太郎"
+    
+    # 真偽値を確認
+    assert employee.id.isdigit()
+    
+    # 長さを確認
+    assert len(employee.id) == 4
+```
+
+**assert文の種類:**
+
+| assert文 | 意味 | 例 |
+|---------|------|---|
+| `assert A == B` | Aが Bと等しい | `assert age == 30` |
+| `assert A != B` | Aが Bと異なる | `assert name != "田中"` |
+| `assert A is None` | Aが Noneである | `assert result is None` |
+| `assert A is not None` | Aが Noneでない | `assert employee is not None` |
+| `assert A in B` | AがBに含まれる | `assert "太郎" in name` |
+| `assert A > B` | AがBより大きい | `assert age > 18` |
+
+---
+
+### 4. capsys フィクスチャ
+
+```python
+def test_employee_self_introduction(self, capsys):
+    """社員の自己紹介テスト"""
+    employee = Employee("田中三郎", Gender.MAN, 33, Post.SYUNIN)
+    employee.do_self_introduction()  # print文を実行
+    
+    captured = capsys.readouterr()  # 出力をキャプチャ
+    assert "田中三郎" in captured.out  # 出力に含まれるか確認
+```
+
+**capsysとは:**
+- 標準出力（`print`文の内容）をキャプチャするpytestの機能
+- `capsys.readouterr()`: 出力を取得
+- `captured.out`: 標準出力の内容
+- `captured.err`: 標準エラー出力の内容
+
+**使い方のステップ:**
+1. テスト関数の引数に`capsys`を追加
+2. print文を実行する関数を呼ぶ
+3. `capsys.readouterr()`で出力を取得
+4. `assert`で内容を確認
+
+---
+
+### 5. pytest.fixture（今回は未使用だが重要）
+
+```python
+@pytest.fixture
+def sample_company():
+    """テスト用の会社を作成"""
+    company = Company()
+    company.add_employee("太郎", Gender.MAN, 30, Post.HIRA)
+    return company
+
+def test_something(sample_company):
+    # sample_companyが自動的に渡される
+    assert sample_company.current_number == 1
+```
+
+**フィクスチャとは:**
+- テストの前準備（セットアップ）を関数化
+- 複数のテストで共通の準備処理を再利用
+- `@pytest.fixture`デコレータで定義
+
+---
+
+## 実例で学ぶ
+
+### 例1: シンプルな値のテスト
+
+```python
+def test_employee_salary(self):
+    """給与のテスト"""
+    hira = Employee("A", Gender.MAN, 25, Post.HIRA)
+    syunin = Employee("B", Gender.MAN, 30, Post.SYUNIN)
+    
+    assert hira.salary == 200000
+    assert syunin.salary == 300000
+```
+
+**解説:**
+1. テスト対象のオブジェクトを作成
+2. プロパティの値を`assert`で確認
+3. 複数のケースを同じテスト内でチェック
+
+---
+
+### 例2: 状態変化のテスト
+
+```python
+def test_employee_promote(self, capsys):
+    """昇進テスト"""
+    employee = Employee("昇進太郎", Gender.MAN, 30, Post.HIRA)
+    
+    # 最初の状態を確認
+    assert employee.post == Post.HIRA
+    
+    # 昇進を実行
+    employee.promote()
+    
+    # 変化後の状態を確認
+    assert employee.post == Post.SYUNIN
+```
+
+**ポイント:**
+- ✅ 初期状態を確認
+- ✅ アクションを実行
+- ✅ 変化後の状態を確認
+- これは**AAA パターン**（Arrange-Act-Assert）と呼ばれる
+
+---
+
+### 例3: 境界値テスト
+
+```python
+def test_employee_promote(self, capsys):
+    """昇進テスト"""
+    employee = Employee("昇進太郎", Gender.MAN, 30, Post.HIRA)
+    
+    employee.promote()  # ヒラ → 主任
+    assert employee.post == Post.SYUNIN
+    
+    employee.promote()  # 主任 → 課長
+    assert employee.post == Post.KATYO
+    
+    employee.promote()  # 課長 → 役員
+    assert employee.post == Post.YARUIN
+    
+    # 最高役職での昇進試行（境界値）
+    employee.promote()  # 役員のまま
+    assert employee.post == Post.YARUIN
+    captured = capsys.readouterr()
+    assert "すでに最高役職" in captured.out
+```
+
+**境界値テストとは:**
+- 最大値、最小値などの境界条件でのテスト
+- バグが発生しやすい箇所を重点的にチェック
+
+---
+
+### 例4: Noneチェックのテスト
+
+```python
+def test_president_get_personnel_by_name(self):
+    """名前で社員検索テスト"""
+    president = President("社長太郎", Gender.MAN, 60)
+    company = Company()
+    president.company = company
+    
+    company.add_employee("佐藤太郎", Gender.MAN, 30, Post.HIRA)
+    
+    # 存在する社員の検索
+    found = president.get_personnel_by_name("佐藤太郎")
+    assert found is not None  # Noneでないことを確認
+    assert found.name == "佐藤太郎"
+    
+    # 存在しない社員の検索
+    not_found = president.get_personnel_by_name("存在しない人")
+    assert not_found is None  # Noneであることを確認
+```
+
+**ポイント:**
+- ✅ 正常系（成功ケース）をテスト
+- ✅ 異常系（失敗ケース）もテスト
+- ✅ `is None` / `is not None` で明示的にチェック
+
+---
+
+### 例5: 統合テスト
+
+```python
+def test_complete_workflow(self, capsys):
+    """完全なワークフローのテスト"""
+    # 準備
+    president = President("統合テスト社長", Gender.MAN, 65)
+    company = Company()
+    president.company = company
+    
+    # 実行：複数の操作を連続で行う
+    president.add_employee("社員A", Gender.MAN, 30, Post.HIRA)
+    president.add_employee("社員B", Gender.WOMAN, 35, Post.SYUNIN)
+    president.add_employee("社員C", Gender.MAN, 45, Post.YARUIN)
+    
+    # 確認1
+    assert company.current_number == 3
+    
+    # 実行：検索と昇進
+    employee = president.get_personnel_by_name("社員A")
+    assert employee is not None
+    employee.promote()
+    
+    # 確認2
+    assert employee.post == Post.SYUNIN
+    
+    # 実行：辞任
+    new_president = president.resignation()
+    
+    # 確認3
+    assert new_president is not None
+    assert new_president.name == "社員C"
+    assert company.current_number == 2
+```
+
+**統合テストとは:**
+- 複数の機能を組み合わせた実際の使用フローをテスト
+- システム全体が正しく動作するかを確認
+
+---
+
+## テスト実行方法
+
+### 基本コマンド
+
+```bash
+# すべてのテストを実行
+pytest test_company_management.py
+
+# 詳細表示（各テスト名を表示）
+pytest test_company_management.py -v
+
+# 特定のクラスのテストのみ実行
+pytest test_company_management.py::TestEmployee
+
+# 特定のテストメソッドのみ実行
+pytest test_company_management.py::TestEmployee::test_employee_salary
+
+# 失敗したテストで即座に停止
+pytest test_company_management.py -x
+
+# カバレッジ表示（要pytest-cov）
+pytest test_company_management.py --cov=company_management
+```
+
+---
+
+## よくある間違いと対処法
+
+### 間違い1: テスト関数名の付け方
+
+```python
+# ❌ NG: test_で始まっていない
+def employee_test(self):
+    pass
+
+# ✅ OK: test_で始める
+def test_employee(self):
+    pass
+```
+
+### 間違い2: assertの使い方
+
+```python
+# ❌ NG: 比較演算子の間違い
+assert employee.name = "太郎"  # 代入になっている
+
+# ✅ OK: 等号演算子を使う
+assert employee.name == "太郎"
+```
+
+### 間違い3: None判定
+
+```python
+# ❌ NG: ==を使う
+assert result == None
+
+# ✅ OK: isを使う
+assert result is None
+```
+
+---
+
+## まとめ
+
+### pytestの基本ルール
+1. ✅ テストクラスは`Test`で始める
+2. ✅ テストメソッドは`test_`で始める
+3. ✅ `assert`文で検証する
+4. ✅ `capsys`でprint出力をテストする
+
+### 良いテストを書くコツ
+1. ✅ 1つのテストで1つの機能をテスト
+2. ✅ テスト名で何をテストしているか明確に
+3. ✅ 正常系と異常系の両方をテスト
+4. ✅ 境界値（最大・最小）をテスト
+
+### テストのパターン（AAAパターン）
+1. **Arrange（準備）**: テストに必要なオブジェクトを作成
+2. **Act（実行）**: テスト対象の処理を実行
+3. **Assert（検証）**: 結果が期待通りか確認
+
+---
+
+## 参考資料
+
+- 公式ドキュメント: https://docs.pytest.org/
+- pytest チュートリアル: https://docs.pytest.org/en/stable/getting-started.html
+- Python テストの書き方: https://docs.python.org/ja/3/library/unittest.html
