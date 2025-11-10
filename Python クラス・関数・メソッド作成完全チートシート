@@ -1,0 +1,1555 @@
+# Python クラス・関数・メソッド作成完全チートシート
+
+## 目次
+1. [関数の基本](#関数の基本)
+2. [クラスの基本](#クラスの基本)
+3. [インスタンスの作成と使用](#インスタンスの作成と使用)
+4. [メソッドの種類](#メソッドの種類)
+5. [特殊メソッド](#特殊メソッド)
+6. [継承](#継承)
+7. [実践的な例](#実践的な例)
+
+---
+
+## 関数の基本
+
+### 基本的な関数定義
+
+```python
+# 最もシンプルな関数
+def greet():
+    print("Hello!")
+
+# 実行
+greet()  # 出力: Hello!
+```
+
+### 引数を持つ関数
+
+```python
+# 位置引数
+def greet(name):
+    print(f"Hello, {name}!")
+
+greet("Alice")  # 出力: Hello, Alice!
+
+# 複数の引数
+def add(a, b):
+    return a + b
+
+result = add(5, 3)  # result = 8
+```
+
+### デフォルト引数
+
+```python
+def greet(name, greeting="Hello"):
+    print(f"{greeting}, {name}!")
+
+greet("Alice")              # 出力: Hello, Alice!
+greet("Bob", "Hi")          # 出力: Hi, Bob!
+greet("Charlie", greeting="Hey")  # 出力: Hey, Charlie!
+```
+
+### キーワード引数
+
+```python
+def create_user(name, age, email):
+    return {
+        "name": name,
+        "age": age,
+        "email": email
+    }
+
+# キーワード引数で呼び出し
+user = create_user(name="Alice", age=25, email="alice@example.com")
+user = create_user(email="bob@example.com", name="Bob", age=30)  # 順序は自由
+```
+
+### 可変長引数
+
+```python
+# *args - 任意の数の位置引数
+def sum_all(*args):
+    return sum(args)
+
+print(sum_all(1, 2, 3))        # 出力: 6
+print(sum_all(1, 2, 3, 4, 5))  # 出力: 15
+
+# **kwargs - 任意の数のキーワード引数
+def print_info(**kwargs):
+    for key, value in kwargs.items():
+        print(f"{key}: {value}")
+
+print_info(name="Alice", age=25, city="Tokyo")
+# 出力:
+# name: Alice
+# age: 25
+# city: Tokyo
+
+# 両方を組み合わせる
+def flexible_function(required, *args, **kwargs):
+    print(f"必須引数: {required}")
+    print(f"位置引数: {args}")
+    print(f"キーワード引数: {kwargs}")
+
+flexible_function("必須", 1, 2, 3, name="Alice", age=25)
+```
+
+### 戻り値
+
+```python
+# 単一の戻り値
+def square(x):
+    return x ** 2
+
+# 複数の戻り値（タプル）
+def get_user_info():
+    return "Alice", 25, "alice@example.com"
+
+name, age, email = get_user_info()
+
+# 戻り値がない場合はNoneを返す
+def print_message(msg):
+    print(msg)
+    # return文がない場合、自動的にNoneを返す
+
+result = print_message("Hello")  # result is None
+```
+
+### 型ヒント（Type Hints）
+
+```python
+def add(a: int, b: int) -> int:
+    return a + b
+
+def greet(name: str, age: int = 0) -> str:
+    return f"Hello, {name}! Age: {age}"
+
+from typing import List, Dict, Optional, Union
+
+def process_items(items: List[int]) -> int:
+    return sum(items)
+
+def get_user(user_id: int) -> Optional[Dict[str, str]]:
+    # Noneまたは辞書を返す
+    if user_id > 0:
+        return {"name": "Alice", "email": "alice@example.com"}
+    return None
+```
+
+---
+
+## クラスの基本
+
+### 最もシンプルなクラス
+
+```python
+class Person:
+    pass
+
+# インスタンス作成
+person = Person()
+```
+
+### 初期化メソッド（コンストラクタ）
+
+```python
+class Person:
+    def __init__(self, name, age):
+        self.name = name  # インスタンス変数
+        self.age = age
+
+# インスタンス作成
+person = Person("Alice", 25)
+print(person.name)  # 出力: Alice
+print(person.age)   # 出力: 25
+```
+
+### クラス変数とインスタンス変数
+
+```python
+class Person:
+    # クラス変数（すべてのインスタンスで共有）
+    species = "Homo sapiens"
+    count = 0
+    
+    def __init__(self, name, age):
+        # インスタンス変数（各インスタンス固有）
+        self.name = name
+        self.age = age
+        Person.count += 1
+
+person1 = Person("Alice", 25)
+person2 = Person("Bob", 30)
+
+print(Person.species)    # 出力: Homo sapiens
+print(person1.species)   # 出力: Homo sapiens
+print(Person.count)      # 出力: 2
+```
+
+### デフォルト値を持つ初期化
+
+```python
+class User:
+    def __init__(self, username, email, role="user", is_active=True):
+        self.username = username
+        self.email = email
+        self.role = role
+        self.is_active = is_active
+
+user1 = User("alice", "alice@example.com")
+user2 = User("bob", "bob@example.com", role="admin", is_active=False)
+```
+
+---
+
+## インスタンスの作成と使用
+
+### 基本的なインスタンス操作
+
+```python
+class Car:
+    def __init__(self, brand, model, year):
+        self.brand = brand
+        self.model = model
+        self.year = year
+        self.mileage = 0
+    
+    def drive(self, distance):
+        self.mileage += distance
+        print(f"{self.brand} {self.model}が{distance}km走行しました")
+    
+    def get_info(self):
+        return f"{self.year}年式 {self.brand} {self.model} (走行距離: {self.mileage}km)"
+
+# インスタンス作成
+my_car = Car("Toyota", "Corolla", 2020)
+
+# メソッド呼び出し
+my_car.drive(100)
+my_car.drive(50)
+
+# 属性にアクセス
+print(my_car.mileage)      # 出力: 150
+print(my_car.get_info())   # 出力: 2020年式 Toyota Corolla (走行距離: 150km)
+```
+
+### 複数のインスタンス
+
+```python
+car1 = Car("Toyota", "Corolla", 2020)
+car2 = Car("Honda", "Civic", 2021)
+car3 = Car("Nissan", "Altima", 2019)
+
+car1.drive(100)
+car2.drive(200)
+car3.drive(150)
+
+print(car1.mileage)  # 出力: 100
+print(car2.mileage)  # 出力: 200
+print(car3.mileage)  # 出力: 150
+```
+
+---
+
+## メソッドの種類
+
+### 1. インスタンスメソッド（最も一般的）
+
+```python
+class Calculator:
+    def __init__(self, name):
+        self.name = name
+    
+    # インスタンスメソッド（第一引数はself）
+    def add(self, a, b):
+        return a + b
+    
+    def multiply(self, a, b):
+        return a * b
+    
+    def get_name(self):
+        return self.name
+
+calc = Calculator("My Calculator")
+print(calc.add(5, 3))        # 出力: 8
+print(calc.get_name())       # 出力: My Calculator
+```
+
+### 2. クラスメソッド
+
+```python
+class Person:
+    count = 0
+    
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        Person.count += 1
+    
+    @classmethod
+    def get_count(cls):
+        """クラスメソッド - クラス変数にアクセス"""
+        return cls.count
+    
+    @classmethod
+    def from_birth_year(cls, name, birth_year):
+        """代替コンストラクタ"""
+        from datetime import datetime
+        age = datetime.now().year - birth_year
+        return cls(name, age)
+
+# 通常の作成
+person1 = Person("Alice", 25)
+
+# クラスメソッドを使った作成
+person2 = Person.from_birth_year("Bob", 1990)
+
+# クラスメソッドの呼び出し
+print(Person.get_count())  # 出力: 2
+```
+
+### 3. 静的メソッド
+
+```python
+class MathUtils:
+    @staticmethod
+    def is_even(number):
+        """静的メソッド - selfもclsも不要"""
+        return number % 2 == 0
+    
+    @staticmethod
+    def celsius_to_fahrenheit(celsius):
+        return (celsius * 9/5) + 32
+    
+    @staticmethod
+    def fahrenheit_to_celsius(fahrenheit):
+        return (fahrenheit - 32) * 5/9
+
+# インスタンス作成不要で呼び出せる
+print(MathUtils.is_even(4))                    # 出力: True
+print(MathUtils.celsius_to_fahrenheit(25))     # 出力: 77.0
+print(MathUtils.fahrenheit_to_celsius(77))     # 出力: 25.0
+```
+
+### メソッドの種類の比較
+
+```python
+class Example:
+    class_var = "クラス変数"
+    
+    def __init__(self, value):
+        self.instance_var = value
+    
+    # インスタンスメソッド - インスタンス変数にアクセス可能
+    def instance_method(self):
+        return f"インスタンスメソッド: {self.instance_var}"
+    
+    # クラスメソッド - クラス変数にアクセス可能
+    @classmethod
+    def class_method(cls):
+        return f"クラスメソッド: {cls.class_var}"
+    
+    # 静的メソッド - 何にもアクセスできない（独立した関数）
+    @staticmethod
+    def static_method():
+        return "静的メソッド: 独立した処理"
+
+obj = Example("インスタンス変数")
+
+print(obj.instance_method())      # インスタンス経由
+print(Example.class_method())     # クラス経由
+print(Example.static_method())    # クラス経由
+```
+
+---
+
+## 特殊メソッド（マジックメソッド）
+
+### よく使う特殊メソッド
+
+```python
+class Book:
+    def __init__(self, title, author, pages):
+        """コンストラクタ"""
+        self.title = title
+        self.author = author
+        self.pages = pages
+    
+    def __str__(self):
+        """print()や str()で呼ばれる"""
+        return f"'{self.title}' by {self.author}"
+    
+    def __repr__(self):
+        """デバッグ用の文字列表現"""
+        return f"Book(title='{self.title}', author='{self.author}', pages={self.pages})"
+    
+    def __len__(self):
+        """len()で呼ばれる"""
+        return self.pages
+    
+    def __eq__(self, other):
+        """==で比較するときに呼ばれる"""
+        if isinstance(other, Book):
+            return self.title == other.title and self.author == other.author
+        return False
+    
+    def __lt__(self, other):
+        """<で比較するときに呼ばれる"""
+        return self.pages < other.pages
+    
+    def __add__(self, other):
+        """+で結合するときに呼ばれる"""
+        if isinstance(other, Book):
+            return self.pages + other.pages
+        return NotImplemented
+
+# 使用例
+book1 = Book("Python入門", "山田太郎", 300)
+book2 = Book("Python実践", "鈴木花子", 450)
+
+print(book1)                    # 出力: 'Python入門' by 山田太郎
+print(repr(book1))              # 出力: Book(title='Python入門', author='山田太郎', pages=300)
+print(len(book1))               # 出力: 300
+print(book1 == book2)           # 出力: False
+print(book1 < book2)            # 出力: True
+print(book1 + book2)            # 出力: 750
+```
+
+### コンテナ型の特殊メソッド
+
+```python
+class ShoppingCart:
+    def __init__(self):
+        self.items = []
+    
+    def __len__(self):
+        """len(cart)"""
+        return len(self.items)
+    
+    def __getitem__(self, index):
+        """cart[index]"""
+        return self.items[index]
+    
+    def __setitem__(self, index, value):
+        """cart[index] = value"""
+        self.items[index] = value
+    
+    def __delitem__(self, index):
+        """del cart[index]"""
+        del self.items[index]
+    
+    def __contains__(self, item):
+        """item in cart"""
+        return item in self.items
+    
+    def __iter__(self):
+        """for item in cart"""
+        return iter(self.items)
+    
+    def add(self, item):
+        self.items.append(item)
+
+# 使用例
+cart = ShoppingCart()
+cart.add("Apple")
+cart.add("Banana")
+cart.add("Orange")
+
+print(len(cart))              # 出力: 3
+print(cart[0])                # 出力: Apple
+print("Banana" in cart)       # 出力: True
+
+for item in cart:
+    print(item)
+```
+
+### コンテキストマネージャー
+
+```python
+class FileManager:
+    def __init__(self, filename, mode):
+        self.filename = filename
+        self.mode = mode
+        self.file = None
+    
+    def __enter__(self):
+        """withブロックに入るときに呼ばれる"""
+        self.file = open(self.filename, self.mode)
+        return self.file
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        """withブロックを抜けるときに呼ばれる"""
+        if self.file:
+            self.file.close()
+        return False  # 例外を再送出
+
+# 使用例
+with FileManager("test.txt", "w") as f:
+    f.write("Hello, World!")
+# ブロックを抜けると自動的にファイルが閉じられる
+```
+
+---
+
+## 継承
+
+### 基本的な継承
+
+```python
+# 親クラス（基底クラス）
+class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        return "何か音を出す"
+    
+    def info(self):
+        return f"名前: {self.name}"
+
+# 子クラス（派生クラス）
+class Dog(Animal):
+    def speak(self):
+        """メソッドのオーバーライド"""
+        return "ワンワン!"
+    
+    def fetch(self):
+        """新しいメソッドの追加"""
+        return f"{self.name}がボールを取ってきた"
+
+class Cat(Animal):
+    def speak(self):
+        return "ニャー"
+    
+    def scratch(self):
+        return f"{self.name}が爪を研いでいる"
+
+# 使用例
+dog = Dog("ポチ")
+cat = Cat("タマ")
+
+print(dog.speak())      # 出力: ワンワン!
+print(dog.info())       # 出力: 名前: ポチ（親クラスのメソッド）
+print(dog.fetch())      # 出力: ポチがボールを取ってきた
+
+print(cat.speak())      # 出力: ニャー
+print(cat.info())       # 出力: 名前: タマ
+```
+
+### super()を使った継承
+
+```python
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    
+    def introduce(self):
+        return f"私は{self.name}、{self.age}歳です"
+
+class Student(Person):
+    def __init__(self, name, age, student_id, grade):
+        # 親クラスの__init__を呼び出す
+        super().__init__(name, age)
+        self.student_id = student_id
+        self.grade = grade
+    
+    def introduce(self):
+        # 親クラスのメソッドを呼び出して拡張
+        parent_intro = super().introduce()
+        return f"{parent_intro}。学生ID: {self.student_id}, 学年: {self.grade}"
+    
+    def study(self):
+        return f"{self.name}が勉強しています"
+
+# 使用例
+student = Student("田中太郎", 20, "S12345", 2)
+print(student.introduce())
+# 出力: 私は田中太郎、20歳です。学生ID: S12345, 学年: 2
+print(student.study())
+# 出力: 田中太郎が勉強しています
+```
+
+### 多重継承
+
+```python
+class Flyable:
+    def fly(self):
+        return "飛んでいる"
+
+class Swimmable:
+    def swim(self):
+        return "泳いでいる"
+
+class Duck(Animal, Flyable, Swimmable):
+    def __init__(self, name):
+        super().__init__(name)
+    
+    def speak(self):
+        return "ガーガー"
+
+# 使用例
+duck = Duck("ドナルド")
+print(duck.speak())  # 出力: ガーガー
+print(duck.fly())    # 出力: 飛んでいる
+print(duck.swim())   # 出力: 泳いでいる
+print(duck.info())   # 出力: 名前: ドナルド
+```
+
+---
+
+## プライベート属性とメソッド
+
+```python
+class BankAccount:
+    def __init__(self, account_number, balance):
+        self.account_number = account_number  # パブリック
+        self._balance = balance                # プロテクテッド（慣習）
+        self.__pin = "1234"                    # プライベート
+    
+    def deposit(self, amount):
+        """パブリックメソッド"""
+        if amount > 0:
+            self._balance += amount
+            return True
+        return False
+    
+    def withdraw(self, amount, pin):
+        """パブリックメソッド"""
+        if self.__verify_pin(pin) and amount <= self._balance:
+            self._balance -= amount
+            return True
+        return False
+    
+    def __verify_pin(self, pin):
+        """プライベートメソッド"""
+        return pin == self.__pin
+    
+    def get_balance(self):
+        return self._balance
+
+# 使用例
+account = BankAccount("123-456", 1000)
+account.deposit(500)
+print(account.get_balance())           # 出力: 1500
+
+# account.__pin にはアクセスできない（エラー）
+# account.__verify_pin("1234")  # エラー
+```
+
+---
+
+## プロパティ（@property）
+
+```python
+class Temperature:
+    def __init__(self, celsius):
+        self._celsius = celsius
+    
+    @property
+    def celsius(self):
+        """getter"""
+        return self._celsius
+    
+    @celsius.setter
+    def celsius(self, value):
+        """setter"""
+        if value < -273.15:
+            raise ValueError("絶対零度以下の温度は設定できません")
+        self._celsius = value
+    
+    @property
+    def fahrenheit(self):
+        """読み取り専用プロパティ"""
+        return self._celsius * 9/5 + 32
+    
+    @property
+    def kelvin(self):
+        """読み取り専用プロパティ"""
+        return self._celsius + 273.15
+
+# 使用例
+temp = Temperature(25)
+print(temp.celsius)      # 出力: 25
+print(temp.fahrenheit)   # 出力: 77.0
+print(temp.kelvin)       # 出力: 298.15
+
+temp.celsius = 30        # setterが呼ばれる
+print(temp.celsius)      # 出力: 30
+
+# temp.celsius = -300    # ValueError
+```
+
+---
+
+## 実践的な例
+
+### ユーザー管理システム
+
+```python
+from datetime import datetime
+from typing import List, Optional
+
+class User:
+    """ユーザークラス"""
+    
+    _id_counter = 1  # クラス変数
+    
+    def __init__(self, username: str, email: str, role: str = "user"):
+        self.id = User._id_counter
+        User._id_counter += 1
+        self.username = username
+        self.email = email
+        self.role = role
+        self.created_at = datetime.now()
+        self.is_active = True
+    
+    def __str__(self):
+        return f"User({self.username}, {self.email})"
+    
+    def __repr__(self):
+        return f"User(id={self.id}, username='{self.username}', role='{self.role}')"
+    
+    def activate(self):
+        """ユーザーをアクティブ化"""
+        self.is_active = True
+    
+    def deactivate(self):
+        """ユーザーを非アクティブ化"""
+        self.is_active = False
+    
+    def update_email(self, new_email: str):
+        """メールアドレスを更新"""
+        self.email = new_email
+    
+    def to_dict(self):
+        """辞書形式に変換"""
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "role": self.role,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat()
+        }
+
+
+class UserManager:
+    """ユーザー管理クラス"""
+    
+    def __init__(self):
+        self.users: List[User] = []
+    
+    def create_user(self, username: str, email: str, role: str = "user") -> User:
+        """新しいユーザーを作成"""
+        user = User(username, email, role)
+        self.users.append(user)
+        return user
+    
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        """IDでユーザーを取得"""
+        for user in self.users:
+            if user.id == user_id:
+                return user
+        return None
+    
+    def get_user_by_username(self, username: str) -> Optional[User]:
+        """ユーザー名でユーザーを取得"""
+        for user in self.users:
+            if user.username == username:
+                return user
+        return None
+    
+    def list_active_users(self) -> List[User]:
+        """アクティブなユーザーのリストを取得"""
+        return [user for user in self.users if user.is_active]
+    
+    def delete_user(self, user_id: int) -> bool:
+        """ユーザーを削除"""
+        user = self.get_user_by_id(user_id)
+        if user:
+            self.users.remove(user)
+            return True
+        return False
+    
+    def __len__(self):
+        return len(self.users)
+    
+    def __iter__(self):
+        return iter(self.users)
+
+
+# 使用例
+manager = UserManager()
+
+# ユーザー作成
+user1 = manager.create_user("alice", "alice@example.com")
+user2 = manager.create_user("bob", "bob@example.com", role="admin")
+user3 = manager.create_user("charlie", "charlie@example.com")
+
+# ユーザー操作
+user3.deactivate()
+
+# ユーザー検索
+user = manager.get_user_by_username("alice")
+print(user)  # 出力: User(alice, alice@example.com)
+
+# アクティブユーザーのリスト
+active_users = manager.list_active_users()
+print(f"アクティブユーザー数: {len(active_users)}")
+
+# 全ユーザーをイテレート
+for user in manager:
+    print(user.to_dict())
+```
+
+### ショッピングカートシステム
+
+```python
+class Product:
+    """商品クラス"""
+    
+    def __init__(self, name: str, price: float, stock: int):
+        self.name = name
+        self.price = price
+        self.stock = stock
+    
+    def __str__(self):
+        return f"{self.name} (¥{self.price})"
+    
+    def is_available(self, quantity: int = 1) -> bool:
+        """在庫があるか確認"""
+        return self.stock >= quantity
+    
+    def reduce_stock(self, quantity: int):
+        """在庫を減らす"""
+        if self.is_available(quantity):
+            self.stock -= quantity
+            return True
+        return False
+
+
+class CartItem:
+    """カート内のアイテム"""
+    
+    def __init__(self, product: Product, quantity: int):
+        self.product = product
+        self.quantity = quantity
+    
+    def get_subtotal(self) -> float:
+        """小計を計算"""
+        return self.product.price * self.quantity
+    
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity} = ¥{self.get_subtotal()}"
+
+
+class ShoppingCart:
+    """ショッピングカート"""
+    
+    def __init__(self):
+        self.items: List[CartItem] = []
+    
+    def add_item(self, product: Product, quantity: int = 1) -> bool:
+        """商品をカートに追加"""
+        if not product.is_available(quantity):
+            print(f"{product.name}の在庫が不足しています")
+            return False
+        
+        # 既にカートにある商品か確認
+        for item in self.items:
+            if item.product == product:
+                item.quantity += quantity
+                return True
+        
+        # 新しい商品を追加
+        self.items.append(CartItem(product, quantity))
+        return True
+    
+    def remove_item(self, product: Product):
+        """商品をカートから削除"""
+        self.items = [item for item in self.items if item.product != product]
+    
+    def update_quantity(self, product: Product, quantity: int):
+        """商品の数量を更新"""
+        for item in self.items:
+            if item.product == product:
+                if quantity <= 0:
+                    self.remove_item(product)
+                else:
+                    item.quantity = quantity
+                break
+    
+    def get_total(self) -> float:
+        """合計金額を計算"""
+        return sum(item.get_subtotal() for item in self.items)
+    
+    def clear(self):
+        """カートを空にする"""
+        self.items.clear()
+    
+    def checkout(self) -> bool:
+        """チェックアウト処理"""
+        for item in self.items:
+            if not item.product.reduce_stock(item.quantity):
+                print(f"{item.product.name}の在庫が不足しています")
+                return False
+        
+        print(f"購入完了: 合計 ¥{self.get_total()}")
+        self.clear()
+        return True
+    
+    def __len__(self):
+        return len(self.items)
+    
+    def __str__(self):
+        if not self.items:
+            return "カートは空です"
+        
+        result = "===== カートの中身 =====\n"
+        for item in self.items:
+            result += f"{item}\n"
+        result += f"合計: ¥{self.get_total()}"
+        return result
+
+
+# 使用例
+# 商品を作成
+apple = Product("りんご", 100, 50)
+banana = Product("バナナ", 80, 30)
+orange = Product("オレンジ", 120, 20)
+
+# カートを作成
+cart = ShoppingCart()
+
+# 商品を追加
+cart.add_item(apple, 3)
+cart.add_item(banana, 2)
+cart.add_item(orange, 1)
+
+# カートの中身を表示
+print(cart)
+# 出力:
+# ===== カートの中身 =====
+# りんご x 3 = ¥300
+# バナナ x 2 = ¥160
+# オレンジ x 1 = ¥120
+# 合計: ¥580
+
+# 数量を更新
+cart.update_quantity(apple, 5)
+
+# チェックアウト
+cart.checkout()  # 出力: 購入完了: 合計 ¥580
+```
+
+## まとめ
+
+### 関数 vs メソッド
+
+| 特徴 | 関数 | メソッド |
+|------|------|----------|
+| 定義場所 | クラスの外 | クラスの中 |
+| 第一引数 | 任意 | self（インスタンスメソッドの場合） |
+| 呼び出し方 | `function_name()` | `object.method_name()` |
+| アクセス範囲 | グローバル | オブジェクト固有 |
+
+### クラス設計のチェックリスト
+
+✅ **クラス名**: CapWords（パスカルケース）を使用
+✅ **メソッド名**: snake_caseを使用
+✅ **`__init__`**: 必要な初期化を実装
+✅ **`__str__`**: ユーザー向けの文字列表現を実装
+✅ **`__repr__`**: デバッグ用の文字列表現を実装
+✅ **プライベート属性**: 先頭にアンダースコア（`_`または`__`）
+✅ **型ヒント**: 引数と戻り値の型を明記
+✅ **ドキュメント**: docstringでクラスとメソッドを説明
+
+### よくあるパターン
+
+#### シングルトンパターン
+
+```python
+class Singleton:
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if not hasattr(self, 'initialized'):
+            self.initialized = True
+            # 初期化処理
+
+# 使用例
+s1 = Singleton()
+s2 = Singleton()
+print(s1 is s2)  # True - 同じインスタンス
+```
+
+#### ファクトリーパターン
+
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        pass
+
+class Dog(Animal):
+    def speak(self):
+        return "ワンワン"
+
+class Cat(Animal):
+    def speak(self):
+        return "ニャー"
+
+class AnimalFactory:
+    @staticmethod
+    def create_animal(animal_type: str, name: str) -> Animal:
+        """ファクトリーメソッド"""
+        if animal_type == "dog":
+            return Dog(name)
+        elif animal_type == "cat":
+            return Cat(name)
+        else:
+            raise ValueError(f"不明な動物タイプ: {animal_type}")
+
+# 使用例
+dog = AnimalFactory.create_animal("dog", "ポチ")
+cat = AnimalFactory.create_animal("cat", "タマ")
+
+print(dog.speak())  # ワンワン
+print(cat.speak())  # ニャー
+```
+
+#### ビルダーパターン
+
+```python
+class Pizza:
+    def __init__(self):
+        self.size = None
+        self.cheese = False
+        self.pepperoni = False
+        self.mushrooms = False
+        self.olives = False
+    
+    def __str__(self):
+        toppings = []
+        if self.cheese:
+            toppings.append("チーズ")
+        if self.pepperoni:
+            toppings.append("ペパロニ")
+        if self.mushrooms:
+            toppings.append("マッシュルーム")
+        if self.olives:
+            toppings.append("オリーブ")
+        
+        return f"{self.size}サイズのピザ (トッピング: {', '.join(toppings)})"
+
+class PizzaBuilder:
+    def __init__(self):
+        self.pizza = Pizza()
+    
+    def set_size(self, size: str):
+        self.pizza.size = size
+        return self
+    
+    def add_cheese(self):
+        self.pizza.cheese = True
+        return self
+    
+    def add_pepperoni(self):
+        self.pizza.pepperoni = True
+        return self
+    
+    def add_mushrooms(self):
+        self.pizza.mushrooms = True
+        return self
+    
+    def add_olives(self):
+        self.pizza.olives = True
+        return self
+    
+    def build(self):
+        return self.pizza
+
+# 使用例（メソッドチェーン）
+pizza = (PizzaBuilder()
+         .set_size("L")
+         .add_cheese()
+         .add_pepperoni()
+         .add_mushrooms()
+         .build())
+
+print(pizza)  # Lサイズのピザ (トッピング: チーズ, ペパロニ, マッシュルーム)
+```
+
+#### データクラス（Python 3.7+）
+
+```python
+from dataclasses import dataclass, field
+from typing import List
+
+@dataclass
+class Product:
+    """データクラス - 自動的に__init__, __repr__, __eq__などを生成"""
+    name: str
+    price: float
+    stock: int = 0
+    tags: List[str] = field(default_factory=list)
+    
+    def is_available(self) -> bool:
+        return self.stock > 0
+    
+    def apply_discount(self, percentage: float):
+        self.price *= (1 - percentage / 100)
+
+# 使用例
+product = Product("ノートパソコン", 100000, stock=5, tags=["電子機器", "PC"])
+print(product)
+# 出力: Product(name='ノートパソコン', price=100000, stock=5, tags=['電子機器', 'PC'])
+
+product.apply_discount(10)
+print(product.price)  # 90000.0
+```
+
+#### 列挙型（Enum）
+
+```python
+from enum import Enum, auto
+
+class UserRole(Enum):
+    """ユーザーロールの列挙型"""
+    GUEST = auto()
+    USER = auto()
+    MODERATOR = auto()
+    ADMIN = auto()
+
+class OrderStatus(Enum):
+    """注文ステータスの列挙型"""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
+
+# 使用例
+class User:
+    def __init__(self, username: str, role: UserRole):
+        self.username = username
+        self.role = role
+    
+    def is_admin(self) -> bool:
+        return self.role == UserRole.ADMIN
+
+user = User("alice", UserRole.ADMIN)
+print(user.is_admin())  # True
+print(user.role)        # UserRole.ADMIN
+print(user.role.name)   # ADMIN
+print(user.role.value)  # 4
+
+# 注文クラス
+class Order:
+    def __init__(self, order_id: str):
+        self.order_id = order_id
+        self.status = OrderStatus.PENDING
+    
+    def ship(self):
+        if self.status == OrderStatus.PROCESSING:
+            self.status = OrderStatus.SHIPPED
+    
+    def __str__(self):
+        return f"注文 {self.order_id}: {self.status.value}"
+
+order = Order("ORD-001")
+print(order)  # 注文 ORD-001: pending
+```
+
+---
+
+## デコレータの活用
+
+### 基本的なデコレータ
+
+```python
+import time
+from functools import wraps
+
+def timer(func):
+    """実行時間を計測するデコレータ"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__}の実行時間: {end - start:.4f}秒")
+        return result
+    return wrapper
+
+def cache(func):
+    """結果をキャッシュするデコレータ"""
+    cached_results = {}
+    
+    @wraps(func)
+    def wrapper(*args):
+        if args not in cached_results:
+            cached_results[args] = func(*args)
+        return cached_results[args]
+    return wrapper
+
+# 使用例
+@timer
+@cache
+def fibonacci(n):
+    if n < 2:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(35))
+```
+
+### クラスメソッドでのデコレータ
+
+```python
+class APIClient:
+    def __init__(self, base_url):
+        self.base_url = base_url
+        self.token = None
+    
+    def require_auth(func):
+        """認証が必要なメソッド用デコレータ"""
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            if not self.token:
+                raise Exception("認証が必要です")
+            return func(self, *args, **kwargs)
+        return wrapper
+    
+    def login(self, username, password):
+        # 認証処理
+        self.token = "dummy_token"
+        return True
+    
+    @require_auth
+    def get_user_data(self, user_id):
+        return f"ユーザー {user_id} のデータ"
+    
+    @require_auth
+    def update_profile(self, data):
+        return "プロフィール更新完了"
+
+# 使用例
+client = APIClient("https://api.example.com")
+# client.get_user_data(1)  # Exception: 認証が必要です
+
+client.login("user", "pass")
+print(client.get_user_data(1))  # ユーザー 1 のデータ
+```
+
+---
+
+## 抽象クラスとインターフェース
+
+```python
+from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):
+    """支払い方法の抽象クラス"""
+    
+    @abstractmethod
+    def process_payment(self, amount: float) -> bool:
+        """支払い処理（必ず実装が必要）"""
+        pass
+    
+    @abstractmethod
+    def refund(self, amount: float) -> bool:
+        """返金処理（必ず実装が必要）"""
+        pass
+    
+    def log_transaction(self, transaction_type: str, amount: float):
+        """共通処理（実装済み）"""
+        print(f"{transaction_type}: ¥{amount}")
+
+class CreditCard(PaymentMethod):
+    def __init__(self, card_number: str):
+        self.card_number = card_number
+    
+    def process_payment(self, amount: float) -> bool:
+        print(f"クレジットカード {self.card_number[-4:]} で ¥{amount} を支払い")
+        self.log_transaction("支払い", amount)
+        return True
+    
+    def refund(self, amount: float) -> bool:
+        print(f"クレジットカード {self.card_number[-4:]} に ¥{amount} を返金")
+        self.log_transaction("返金", amount)
+        return True
+
+class PayPal(PaymentMethod):
+    def __init__(self, email: str):
+        self.email = email
+    
+    def process_payment(self, amount: float) -> bool:
+        print(f"PayPal ({self.email}) で ¥{amount} を支払い")
+        self.log_transaction("支払い", amount)
+        return True
+    
+    def refund(self, amount: float) -> bool:
+        print(f"PayPal ({self.email}) に ¥{amount} を返金")
+        self.log_transaction("返金", amount)
+        return True
+
+# 使用例
+def checkout(payment_method: PaymentMethod, amount: float):
+    """どの支払い方法でも同じように処理できる"""
+    if payment_method.process_payment(amount):
+        print("支払いが完了しました")
+
+credit_card = CreditCard("1234-5678-9012-3456")
+paypal = PayPal("user@example.com")
+
+checkout(credit_card, 5000)
+checkout(paypal, 3000)
+```
+
+---
+
+## ジェネレータとイテレータ
+
+```python
+class CountDown:
+    """カウントダウンするイテレータ"""
+    
+    def __init__(self, start):
+        self.start = start
+        self.current = start
+    
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        if self.current <= 0:
+            raise StopIteration
+        self.current -= 1
+        return self.current + 1
+
+# 使用例
+for i in CountDown(5):
+    print(i)  # 5, 4, 3, 2, 1
+
+# ジェネレータ版（よりシンプル）
+def countdown(start):
+    """ジェネレータ関数"""
+    while start > 0:
+        yield start
+        start -= 1
+
+for i in countdown(5):
+    print(i)  # 5, 4, 3, 2, 1
+```
+
+### クラスでジェネレータを使う
+
+```python
+class NumberRange:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+    
+    def __iter__(self):
+        """ジェネレータを返す"""
+        current = self.start
+        while current < self.end:
+            yield current
+            current += 1
+    
+    def even_numbers(self):
+        """偶数のみを返すジェネレータ"""
+        for num in self:
+            if num % 2 == 0:
+                yield num
+    
+    def odd_numbers(self):
+        """奇数のみを返すジェネレータ"""
+        for num in self:
+            if num % 2 != 0:
+                yield num
+
+# 使用例
+numbers = NumberRange(1, 10)
+
+print("全ての数:")
+for num in numbers:
+    print(num, end=" ")  # 1 2 3 4 5 6 7 8 9
+
+print("\n偶数のみ:")
+for num in numbers.even_numbers():
+    print(num, end=" ")  # 2 4 6 8
+
+print("\n奇数のみ:")
+for num in numbers.odd_numbers():
+    print(num, end=" ")  # 1 3 5 7 9
+```
+
+---
+
+## 例外処理とカスタム例外
+
+```python
+class ValidationError(Exception):
+    """検証エラー用のカスタム例外"""
+    pass
+
+class DatabaseError(Exception):
+    """データベースエラー用のカスタム例外"""
+    def __init__(self, message, error_code=None):
+        super().__init__(message)
+        self.error_code = error_code
+
+class UserService:
+    def __init__(self):
+        self.users = {}
+    
+    def create_user(self, username: str, email: str):
+        # バリデーション
+        if not username:
+            raise ValidationError("ユーザー名は必須です")
+        
+        if "@" not in email:
+            raise ValidationError("有効なメールアドレスを入力してください")
+        
+        if username in self.users:
+            raise ValidationError(f"ユーザー名 '{username}' は既に使用されています")
+        
+        # ユーザー作成
+        try:
+            self.users[username] = {"email": email}
+            return True
+        except Exception as e:
+            raise DatabaseError("ユーザーの作成に失敗しました", error_code=500)
+    
+    def get_user(self, username: str):
+        if username not in self.users:
+            raise ValidationError(f"ユーザー '{username}' が見つかりません")
+        return self.users[username]
+
+# 使用例
+service = UserService()
+
+try:
+    service.create_user("alice", "alice@example.com")
+    print("ユーザーを作成しました")
+except ValidationError as e:
+    print(f"検証エラー: {e}")
+except DatabaseError as e:
+    print(f"データベースエラー: {e} (コード: {e.error_code})")
+
+try:
+    service.create_user("", "invalid")
+except ValidationError as e:
+    print(f"エラー: {e}")  # エラー: ユーザー名は必須です
+```
+
+---
+
+## クイックリファレンス
+
+### クラス定義のテンプレート
+
+```python
+from typing import List, Optional
+
+class MyClass:
+    """クラスの説明をここに書く"""
+    
+    # クラス変数
+    class_variable = "共有される値"
+    
+    def __init__(self, param1: str, param2: int):
+        """初期化メソッド"""
+        self.param1 = param1  # インスタンス変数
+        self.param2 = param2
+        self._private_var = None  # プライベート変数
+    
+    def __str__(self) -> str:
+        """文字列表現"""
+        return f"MyClass({self.param1}, {self.param2})"
+    
+    def __repr__(self) -> str:
+        """デバッグ用の文字列表現"""
+        return f"MyClass(param1='{self.param1}', param2={self.param2})"
+    
+    def public_method(self) -> str:
+        """パブリックメソッド"""
+        return self._private_method()
+    
+    def _private_method(self) -> str:
+        """プライベートメソッド"""
+        return "private"
+    
+    @classmethod
+    def class_method(cls) -> str:
+        """クラスメソッド"""
+        return cls.class_variable
+    
+    @staticmethod
+    def static_method(param: str) -> str:
+        """静的メソッド"""
+        return param.upper()
+    
+    @property
+    def computed_property(self) -> str:
+        """計算プロパティ"""
+        return f"{self.param1}_{self.param2}"
+```
+
+### よく使う特殊メソッド一覧
+
+```python
+class Example:
+    # 基本
+    def __init__(self): pass          # 初期化
+    def __del__(self): pass           # デストラクタ
+    def __str__(self): pass           # str()
+    def __repr__(self): pass          # repr()
+    
+    # 比較
+    def __eq__(self, other): pass     # ==
+    def __ne__(self, other): pass     # !=
+    def __lt__(self, other): pass     # <
+    def __le__(self, other): pass     # <=
+    def __gt__(self, other): pass     # >
+    def __ge__(self, other): pass     # >=
+    
+    # 算術演算
+    def __add__(self, other): pass    # +
+    def __sub__(self, other): pass    # -
+    def __mul__(self, other): pass    # *
+    def __truediv__(self, other): pass # /
+    def __floordiv__(self, other): pass # //
+    def __mod__(self, other): pass    # %
+    def __pow__(self, other): pass    # **
+    
+    # コンテナ
+    def __len__(self): pass           # len()
+    def __getitem__(self, key): pass  # obj[key]
+    def __setitem__(self, key, value): pass # obj[key] = value
+    def __delitem__(self, key): pass  # del obj[key]
+    def __contains__(self, item): pass # item in obj
+    def __iter__(self): pass          # for item in obj
+    def __next__(self): pass          # next(obj)
+    
+    # コンテキストマネージャ
+    def __enter__(self): pass         # with obj:
+    def __exit__(self, exc_type, exc_value, traceback): pass
+    
+    # 呼び出し可能
+    def __call__(self): pass          # obj()
+```
+
+これでPythonのクラス、関数、メソッドの作成に関する完全なチートシートが完成しました！
